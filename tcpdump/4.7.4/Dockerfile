@@ -1,7 +1,7 @@
 # Tcpdump 4.7.4
 #
 # VERSION               1.0
-FROM      opennsm/debian:1.0
+FROM      opennsm/debian
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
 
 # Specify container username e.g. training, demo

@@ -2,7 +2,7 @@
 # VERSION               1.0
 # docker run -it --privileged=true netsniff-ng:0.5.9 bash
 
-FROM      debian
+FROM       opennsm/debian
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
 
 # Specify container username e.g. training, demo
@@ -12,12 +12,9 @@ ENV VERS 0.5.9
 
 # Install dependencies
 RUN apt-get update -qq
-RUN apt-get install -y git make ccache flex bison libnl-3-dev libnl-genl-3-dev libgeoip-dev libnetfilter-conntrack-dev libncurses5-dev liburcu-dev libnacl-dev libpcap-dev zlib1g-dev libcli-dev libnet1-dev
-RUN apt-get install -y sudo telnet iptables vim emacs nano tcpdump gawk rsyslog
+RUN apt-get install -y make ccache flex bison libnl-3-dev libnl-genl-3-dev libgeoip-dev libnetfilter-conntrack-dev libncurses5-dev liburcu-dev libnacl-dev libpcap-dev zlib1g-dev libcli-dev libnet1-dev
+RUN apt-get install -y telnet iptables tcpdump
 RUN apt-get install -y --no-install-recommends man-db
-
-# User configuration
-RUN adduser --disabled-password --gecos "" $VIRTUSER
 
 # Compile and install netsniff-ng
 RUN mkdir -p /usr/local/share/man/man8
@@ -30,12 +27,6 @@ USER root
 WORKDIR /home/$VIRTUSER/netsniff-ng
 RUN make install
 
-# Passwords
-RUN echo "$VIRTUSER:$VIRTUSER" | chpasswd
-RUN echo "root:opennsm" | chpasswd
-
-# Sudo
-RUN usermod -aG sudo $VIRTUSER
 # Environment
 WORKDIR /home/$VIRTUSER
 USER opennsm
