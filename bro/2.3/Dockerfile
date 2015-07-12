@@ -1,4 +1,4 @@
-# Bro Sandbox - Bro 2.4
+# Bro Sandbox - Bro 2.3
 #
 # VERSION               1.0
 FROM      debian
