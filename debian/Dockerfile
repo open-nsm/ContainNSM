@@ -10,7 +10,7 @@ ENV VIRTUSER opennsm
 # Install general tools
 RUN apt-get update -qq
 RUN apt-get install -yq sudo wget gawk git nano vim emacs
-RUN apt-get install -yq lsof htop dstat sysstat strace
+RUN apt-get install -yq lsof htop dstat sysstat iotop strace
 
 # User configuration
 RUN adduser --disabled-password --gecos "" $VIRTUSER
