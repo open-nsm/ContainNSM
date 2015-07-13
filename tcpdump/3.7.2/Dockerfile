@@ -1,4 +1,4 @@
-# Tcpdump 4.7.4
+# Tcpdump 0.7.2
 #
 # VERSION               1.0
 FROM      opennsm/debian
@@ -7,9 +7,9 @@ MAINTAINER Jon Schipp <jonschipp@gmail.com>
 # Specify container username e.g. training, demo
 ENV VIRTUSER opennsm
 # Specify Tcpdump version to download and install (e.g. 4.7.4)
-ENV TVERS 4.7.4
+ENV TVERS 3.7.2
 # Specify Libpcap version to download and install (e.g. 1.7.4)
-ENV LVERS 1.7.4
+ENV LVERS 0.7.2
 
 # Install dependencies
 RUN apt-get update -qq

@@ -1,4 +1,4 @@
-# Tcpdump 4.7.4
+# Tcpdump 3.5.0
 #
 # VERSION               1.0
 FROM      opennsm/debian
@@ -7,9 +7,9 @@ MAINTAINER Jon Schipp <jonschipp@gmail.com>
 # Specify container username e.g. training, demo
 ENV VIRTUSER opennsm
 # Specify Tcpdump version to download and install (e.g. 4.7.4)
-ENV TVERS 4.7.4
+ENV TVERS 3.5.0
 # Specify Libpcap version to download and install (e.g. 1.7.4)
-ENV LVERS 1.7.4
+ENV LVERS 0.5
 
 # Install dependencies
 RUN apt-get update -qq
@@ -28,7 +28,7 @@ RUN make install
 USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
 RUN wget http://www.tcpdump.org/release/tcpdump-$TVERS.tar.gz && tar -xvzf tcpdump-$TVERS.tar.gz
-WORKDIR /home/$VIRTUSER/tcpdump-$TVERS
+WORKDIR /home/$VIRTUSER/tcpdump-3.5
 RUN ./configure && make
 USER root
 RUN make install
