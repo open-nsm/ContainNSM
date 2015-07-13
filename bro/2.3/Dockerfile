@@ -18,7 +18,7 @@ RUN apt-get install -yq build-essential cmake make gcc g++ flex bison libpcap-de
 # Compile and install bro
 USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
-RUN wget http://www.bro.org/downloads/release/$VERS.tar.gz && tar -xvzf $VERS.tar.gz
+RUN wget http://www.bro.org/downloads/archive/$VERS.tar.gz && tar -xvzf $VERS.tar.gz
 WORKDIR /home/$VIRTUSER/$VERS
 RUN ./configure --prefix=$DST && make
 USER root
