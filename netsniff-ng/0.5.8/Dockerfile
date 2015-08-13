@@ -1,9 +1,13 @@
 # Netsniff-NG
-# VERSION               1.0
+# VERSION               1.1
 # docker run -it --privileged=true netsniff-ng:0.5.9 bash
 
 FROM       opennsm/debian
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
+
+# Metadata
+LABEL organization=opennsm
+LABEL program=netsniff-ng
 
 # Specify container username e.g. training, demo
 ENV VIRTUSER opennsm

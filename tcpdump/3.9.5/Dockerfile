@@ -1,8 +1,12 @@
 # Tcpdump 3.9.5
 #
-# VERSION               1.0
+# VERSION               1.1
 FROM      opennsm/debian
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
+
+# Metadata
+LABEL organization=opennsm
+LABEL program=tcpdump
 
 # Specify container username e.g. training, demo
 ENV VIRTUSER opennsm
@@ -11,6 +15,10 @@ ENV TVERS 3.9.5
 # Specify Libpcap version to download and install (e.g. 1.7.4)
 # 0.9.5 isn't available at tcpdump.org/release
 ENV LVERS 0.9.1
+# Install directory
+ENV PREFIX /opt
+# Path should include prefix
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/sbin
 
 # Install dependencies
 RUN apt-get update -qq
@@ -30,7 +38,7 @@ USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
 RUN wget http://www.tcpdump.org/release/tcpdump-$TVERS.tar.gz && tar -xvzf tcpdump-$TVERS.tar.gz
 WORKDIR /home/$VIRTUSER/tcpdump-$TVERS
-RUN ./configure && make
+RUN ./configure --prefix=$PREFIX && make
 USER root
 RUN make install
 
