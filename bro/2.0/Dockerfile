@@ -1,7 +1,7 @@
 # Bro Sandbox - Bro 2.0
 #
 # VERSION               1.3
-FROM      debian:squeeze
+FROM      opennsm/debian:squeeze
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
 
 # Metadata

@@ -1,7 +1,7 @@
 # Debian
 #
 # VERSION               1.1
-FROM      debian
+FROM      debian:wheezy
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
 
 # Variables
