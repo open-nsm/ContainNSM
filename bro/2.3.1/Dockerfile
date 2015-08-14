@@ -1,6 +1,6 @@
 # Bro Sandbox - Bro 2.3.1
 #
-# VERSION               1.2
+# VERSION               1.3
 FROM      opennsm/debian
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
 
@@ -19,7 +19,7 @@ ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/br
 
 # Install dependencies
 RUN apt-get update -qq
-RUN apt-get install -yq build-essential cmake make gcc g++ flex bison libpcap-dev libgeoip-dev libssl-dev python-dev zlib1g-dev libmagic-dev swig2.0
+RUN apt-get install -yq build-essential cmake make gcc g++ flex bison libpcap-dev libgeoip-dev libssl-dev python-dev zlib1g-dev libmagic-dev swig2.0 ca-certificates --no-install-recommends
 
 # Compile and install bro
 USER $VIRTUSER
