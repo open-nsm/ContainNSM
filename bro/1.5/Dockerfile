@@ -1,6 +1,6 @@
 # Bro Sandbox - Bro 1.5
 #
-# VERSION               1.3
+# VERSION               1.4
 FROM      opennsm/debian:squeeze
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
 
@@ -30,9 +30,9 @@ USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
 RUN wget --no-check-certificate http://www.bro.org/downloads/archive/$PROG-$VERS.$EXT && tar -xzf $PROG-$VERS.$EXT
 WORKDIR /home/$VIRTUSER/$PROG-$VERS
-RUN ./configure --prefix=$PREFIX
-#This seems to fail sometimes, so retry a few times
-RUN make || make || make
+# Was not able to get broctl to build
+RUN ./configure --disable-broctl --prefix=$PREFIX
+RUN make
 USER root
 RUN make install
 
