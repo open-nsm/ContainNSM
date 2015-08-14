@@ -1,6 +1,6 @@
 # Bro Sandbox - Bro 2.3.1
 #
-# VERSION               1.3
+# VERSION               1.4
 FROM      opennsm/debian
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
 
@@ -10,12 +10,16 @@ LABEL program=bro
 
 # Specify container username e.g. training, demo
 ENV VIRTUSER opennsm
+# Specify program
+ENV PROG bro
+# Specify source extension
+ENV EXT tar.gz
 # Specify Bro version to download and install (e.g. bro-2.3.1, bro-2.4)
-ENV VERS bro-2.3.1
+ENV VERS 2.3.1
 # Install directory 
-ENV PREFIX /opt
+ENV PREFIX /opt/bro
 # Path should include prefix
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/bro/bin
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/bin
 
 # Install dependencies
 RUN apt-get update -qq
@@ -24,11 +28,14 @@ RUN apt-get install -yq build-essential cmake make gcc g++ flex bison libpcap-de
 # Compile and install bro
 USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
-RUN wget --no-check-certificate http://www.bro.org/downloads/archive/$VERS.tar.gz && tar -xvzf $VERS.tar.gz
-WORKDIR /home/$VIRTUSER/$VERS
+RUN wget --no-check-certificate http://www.bro.org/downloads/archive/$PROG-$VERS.$EXT && tar -xzf $PROG-$VERS.$EXT
+WORKDIR /home/$VIRTUSER/$PROG-$VERS
 RUN ./configure --prefix=$PREFIX && make
 USER root
 RUN make install
+
+# Cleanup
+RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
 
 # Environment
 WORKDIR /home/$VIRTUSER
