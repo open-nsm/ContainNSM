@@ -1,4 +1,4 @@
-# Bro Sandbox - Bro 2.1
+# Bro Sandbox - Bro 1.5
 #
 # VERSION               1.2
 FROM      debian:squeeze
@@ -11,9 +11,7 @@ LABEL program=bro
 # Specify container username e.g. training, demo
 ENV VIRTUSER opennsm
 # Specify Bro version to download and install (e.g. bro-2.3.1, bro-2.4)
-ENV VERS bro-2.1
-# Place to install bro
-ENV DST /opt/bro
+ENV VERS bro-1.5
 # Install directory
 ENV PREFIX /opt
 # Path should include prefix
@@ -21,14 +19,16 @@ ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/br
 
 # Install dependencies
 RUN apt-get update -qq
-RUN apt-get install -yq build-essential cmake make gcc g++ flex bison libpcap-dev libgeoip-dev libcurl4-openssl-dev libncurses5-dev python-dev zlib1g-dev libmagic-dev swig2.0 file
+RUN apt-get install -yq build-essential cmake make gcc g++ flex bison libpcap-dev libgeoip-dev libcurl4-openssl-dev libncurses5-dev python-dev zlib1g-dev libmagic-dev swig2.0 file libmagic-dev
 
 # Compile and install bro
 USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
 RUN wget http://www.bro.org/downloads/archive/$VERS.tar.gz && tar -xvzf $VERS.tar.gz
 WORKDIR /home/$VIRTUSER/$VERS
-RUN ./configure --prefix=$PREFIX && make
+RUN ./configure --prefix=$PREFIX
+#This seems to fail sometimes, so retry a few times
+RUN make || make || make
 USER root
 RUN make install
 
