@@ -32,7 +32,7 @@ USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
 RUN wget http://www.tcpdump.org/release/libpcap-$LVERS.$EXT && tar -xvzf libpcap-$LVERS.$EXT
 WORKDIR /home/$VIRTUSER/libpcap-$LVERS
-RUN ./configure && make
+RUN ./configure --enable-yydebug && make
 USER root
 RUN make install
 
