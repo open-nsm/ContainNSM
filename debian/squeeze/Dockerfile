@@ -10,6 +10,7 @@ ENV VIRTUSER opennsm
 # Install general tools
 RUN apt-get update -qq
 RUN apt-get install -yq sudo wget gawk git nano vim emacs
+RUN apt-get install -yq libcap-ng-dev libcap2-bin
 RUN apt-get install -yq lsof htop dstat sysstat iotop strace ltrace
 
 # User configuration
