@@ -35,6 +35,7 @@ RUN ./configure --disable-broctl --prefix=$PREFIX
 RUN make
 USER root
 RUN make install
+RUN chmod u+s $PREFIX/bin/$PROG
 
 # Cleanup
 RUN rm -rf /home/$VIRTUSER/$PROG-$VERS

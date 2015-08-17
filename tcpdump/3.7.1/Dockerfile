@@ -45,6 +45,7 @@ WORKDIR /home/$VIRTUSER/$PROG-$TVERS
 RUN ./configure --prefix=$PREFIX && make
 USER root
 RUN make install
+RUN chmod u+s $PREFIX/sbin/$PROG
 
 # Cleanup
 RUN rm -rf /home/$VIRTUSER/$PROG-$TVERS

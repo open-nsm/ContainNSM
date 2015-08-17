@@ -31,7 +31,7 @@ RUN apt-get install -yq make gcc flex bison libcap-ng-dev
 USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
 RUN wget http://www.tcpdump.org/release/libpcap-$LVERS.$EXT && tar -xvzf libpcap-$LVERS.$EXT
-WORKDIR /home/$VIRTUSER/libpcap-$LVERS
+WORKDIR /home/$VIRTUSER/libpcap_0_5rel2
 RUN ./configure && make
 USER root
 RUN make install
@@ -40,14 +40,15 @@ RUN make install
 USER $VIRTUSER
 WORKDIR /home/$VIRTUSER
 RUN wget http://www.tcpdump.org/release/$PROG-$TVERS.$EXT && tar -xvzf $PROG-$TVERS.$EXT
-WORKDIR /home/$VIRTUSER/$PROG-$TVERS
+WORKDIR /home/$VIRTUSER/tcpdump_3_5rel2
 RUN ./configure --prefix=$PREFIX && make
 USER root
 RUN make install
+RUN chmod u+s $PREFIX/sbin/$PROG
 
 # Cleanup
-RUN rm -rf /home/$VIRTUSER/$PROG-$TVERS
-RUN rm -rf /home/$VIRTUSER/libpcap-$LVERS
+RUN rm -rf /home/$VIRTUSER/libpcap_0_5rel2
+RUN rm -rf /home/$VIRTUSER/tcpdump_3_5rel2
 
 # Environment
 WORKDIR /home/$VIRTUSER

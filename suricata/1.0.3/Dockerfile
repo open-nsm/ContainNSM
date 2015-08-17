@@ -34,6 +34,7 @@ WORKDIR /home/$VIRTUSER/$PROG-$VERS
 RUN ./configure --enable-nfqueue --prefix=$PREFIX --sysconfdir=/etc --localstatedir=/var && make
 USER root
 RUN make install
+RUN chmod u+s $PREFIX/bin/$PROG
 
 # Cleanup
 RUN rm -f /home/$VIRTUSER/$PROG-$VERS.tar.gz

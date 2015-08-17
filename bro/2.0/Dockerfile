@@ -33,6 +33,9 @@ WORKDIR /home/$VIRTUSER/$PROG-$VERS
 RUN ./configure --prefix=$PREFIX && make
 USER root
 RUN make install
+RUN chmod u+s $PREFIX/bin/$PROG
+RUN chmod u+s $PREFIX/bin/broctl
+RUN chmod u+s $PREFIX/bin/capstats
 
 # Cleanup
 RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
