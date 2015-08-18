@@ -31,7 +31,7 @@ WORKDIR /home/$VIRTUSER
 RUN wget http://www.openinfosecfoundation.org/download/$PROG-$VERS.tar.gz
 RUN tar -xvzf $PROG-$VERS.tar.gz
 WORKDIR /home/$VIRTUSER/$PROG-$VERS
-RUN ./configure --enable-nfqueue --prefix=$PREFIX --sysconfdir=/etc --localstatedir=/var && make
+RUN ./configure --enable-nfqueue --prefix=$PREFIX --enable-profiling --enable-debug --enable-debug-validation --enable-unittests --sysconfdir=/etc --localstatedir=/var && make 
 USER root
 RUN make install
 RUN chmod u+s $PREFIX/bin/$PROG
