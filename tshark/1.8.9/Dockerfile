@@ -45,9 +45,7 @@ RUN ./autogen.sh && ./configure --disable-wireshark --enable-profile-build --pre
  make CFLAGS="-fPIC -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include"
 USER root
 RUN make install
-RUN chmod u+s $PREFIX/bin/tshark
 RUN chmod u+s $PREFIX/bin/dumpcap
-RUN chmod u+s $PREFIX/bin/rawshark
 
 # Cleanup
 RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
