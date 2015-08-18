@@ -37,7 +37,7 @@ RUN make install
 RUN chmod u+s $PREFIX/bin/$PROG
 
 # Cleanup
-RUN rm -f /home/$VIRTUSER/$PROG-$VERS.tar.gz
+RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
 
 # Environment
 WORKDIR /home/$VIRTUSER

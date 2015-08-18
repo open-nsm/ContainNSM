@@ -36,7 +36,7 @@ USER root
 RUN make install && make install-full
 
 # Cleanup
-RUN rm -f /home/$VIRTUSER/$PROG-$VERS.tar.gz
+RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
 
 # Environment
 WORKDIR /home/$VIRTUSER

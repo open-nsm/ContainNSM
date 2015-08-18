@@ -13,7 +13,7 @@ ENV VIRTUSER opennsm
 ENV PROG suricata
 # Specify Suricata version to download and install (e.g. 1.4)
 ENV VERS 1.4
-# Install directory 
+# Install directory
 ENV PREFIX /opt
 # Path should include prefix
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/bin
@@ -36,7 +36,7 @@ USER root
 RUN make install && make install-full
 
 # Cleanup
-RUN rm -f /home/$VIRTUSER/$PROG-$VERS.tar.gz
+RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
 
 # Environment
 WORKDIR /home/$VIRTUSER
