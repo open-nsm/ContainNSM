@@ -25,7 +25,7 @@ ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/sb
 
 # Install dependencies
 RUN apt-get update -qq
-RUN apt-get install -yq gcc make bison flex libpcap-dev libsasl2-dev libwrap0-dev libgeoip-dev zlib-dev --no-install-recommends
+RUN apt-get install -yq gcc make bison flex libpcap-dev libsasl2-dev libwrap0-dev libgeoip-dev libz-dev --no-install-recommends
 
 # Compile and install argus
 USER $VIRTUSER
