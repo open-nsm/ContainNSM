@@ -29,7 +29,7 @@ ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/bi
 # Install dependencies
 RUN apt-get update -qq
 RUN apt-get install -yq build-essential autoconf automake libtool bison flex \
-  libpcap-dev libglib2.0-dev libgeoip-dev libkrb5-dev libgnutls-dev \
+  libpcap-dev libglib2.0-dev libgeoip-dev libkrb5-dev  \
   qt5-default libssl-dev libgtk-3-dev \
   libgcrypt-dev libcap-dev libsmi-dev libc-ares-dev --no-install-recommends
 RUN  wget --no-check-certificate https://ftp.gnu.org/gnu/libtool/$LIBTOOL.tar.gz
