@@ -29,8 +29,8 @@ ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/bi
 
 # Install dependencies
 RUN apt-get update -qq
-RUN apt-get install -yq build-essential libpcap-dev libpcre3-dev libdumbnet-dev \
-  bison flex zlib1g-dev autoconf libtool
+RUN apt-get install -yq build-essential libpcre3-dev libdumbnet-dev \
+  bison flex zlib1g-dev autoconf libtool --no-install-recommends
 
 # Compile and install libpcap
 RUN wget http://www.tcpdump.org/release/$LVERS.$EXT
@@ -51,16 +51,16 @@ WORKDIR /home/$VIRTUSER
 RUN wget --no-check-certificate https://www.snort.org/downloads/snort/$PROG-$VERS.$EXT
 RUN tar -zxf $PROG-$VERS.$EXT
 WORKDIR /home/$VIRTUSER/$PROG-$VERS
-RUN ./configure --enable-sourcefire && make
+RUN ./configure --enable-sourcefire --enable-large-pcap --enable-profile --enable-gdb --enable-linux-smp-stats && make
 USER root
 RUN make install && ldconfig
 RUN chmod u+s /usr/local/bin/snort
 
 # Cleanup
-RUN rm -rf /home/$VIRTUSER/$PROG-$VERS*
-RUN rm -rf /root/$DVERS*
-RUN rm -rf /root/$LVERS*
-RUN rm -rf /root/$LDVERS*
+RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
+RUN rm -rf /root/$DVERS
+RUN rm -rf /root/$LVERS
+RUN rm -rf /root/$LDVERS
 
 # Environment
 WORKDIR /home/$VIRTUSER
