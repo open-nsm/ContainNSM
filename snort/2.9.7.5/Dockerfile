@@ -29,7 +29,7 @@ ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/bi
 
 # Install dependencies
 RUN apt-get update -qq
-RUN apt-get install -yq build-essential libpcre3-dev libdumbnet-dev \
+RUN apt-get install -yq build-essential libpcre3-dev \
   bison flex zlib1g-dev autoconf libtool --no-install-recommends
 
 # Compile and install libpcap
@@ -51,10 +51,10 @@ WORKDIR /home/$VIRTUSER
 RUN wget --no-check-certificate https://www.snort.org/downloads/snort/$PROG-$VERS.$EXT
 RUN tar -zxf $PROG-$VERS.$EXT
 WORKDIR /home/$VIRTUSER/$PROG-$VERS
-RUN ./configure --enable-sourcefire --enable-large-pcap --enable-profile --enable-gdb --enable-linux-smp-stats && make
+RUN ./configure --prefix=$PREFIX --enable-sourcefire --enable-large-pcap --enable-profile --enable-gdb --enable-linux-smp-stats && make
 USER root
 RUN make install && ldconfig
-RUN chmod u+s /usr/local/bin/snort
+RUN chmod u+s $PREFIX/bin/snort
 
 # Cleanup
 RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
