@@ -1,4 +1,4 @@
-# Snort 2.9.7.5
+# Snort 2.9.4.1
 #
 # VERSION               1
 FROM opennsm/debian
