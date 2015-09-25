@@ -1,5 +1,5 @@
 # Suricata 2.0.9
-#
+# 
 # VERSION               1
 FROM      opennsm/debian
 MAINTAINER Jon Schipp <jonschipp@gmail.com>
