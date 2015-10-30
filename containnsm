@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+# OpenNSM Team: Jon Schipp <jonschipp@gmail.com>
+import sys
+import os
+import argparse
+import json
+
+VERSION = '0.0.0'
+
+#def list_repo():
+#def list_registry():
+
+def usage():
+  msg='''
+  Nothing to see yet
+  '''
+  print msg
+
+def arguments():
+  parser = argparse.ArgumentParser(description='ContainNSM')
+  subparsers = parser.add_subparsers(help='Types of Commands')
+  
+  # ./containnsm [..]
+  parser.add_argument("-v", "--version", action='version', version='ContainNSM ' + VERSION)
+  
+  # ./containnsm list [..]
+  list_parser = subparsers.add_parser("list")
+  list_parser.add_argument("list", choices=['repo', 'registry'])
+  
+  return vars(parser.parse_args())
+
+def main():
+  args_dict = arguments()
+  option    = args_dict.keys()
+  arg       = args_dict.values()
+
+  usage()
+
+  #if option == 'list':
+  #  if arg == 'repo':
+  #    list_repo()
+  #  if arg == 'registry':
+  #    list_registry()
+
+if __name__ == "__main__":
+  main()
