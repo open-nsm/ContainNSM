@@ -1,46 +1,148 @@
-#!/usr/bin/env python
-# OpenNSM Team: Jon Schipp <jonschipp@gmail.com>
-import sys
-import os
-import argparse
-import json
+#!/usr/bin/env bash
+#set -x
+MAIL=$(which mail)
+COWSAY=/usr/games/cowsay
+IRCSAY=/usr/local/bin/ircsay
+IRC_CHAN="#replace_me"
+HOST=$(hostname -s)
+LOGFILE=containnsm.log
+EMAIL=user@company.com
 
-VERSION = '0.0.0'
+# Globals
+ARGC=$#
+ARGV="$@"
+PARAMS="${ARGV%%--*}"
+CMDLINE="${ARGV#*--}"
 
-#def list_repo():
-#def list_registry():
+usage(){
+cat <<EOF
 
-def usage():
-  msg='''
-  Nothing to see yet
-  '''
-  print msg
+ContainNSM
 
-def arguments():
-  parser = argparse.ArgumentParser(description='ContainNSM')
-  subparsers = parser.add_subparsers(help='Types of Commands')
-  
-  # ./containnsm [..]
-  parser.add_argument("-v", "--version", action='version', version='ContainNSM ' + VERSION)
-  
-  # ./containnsm list [..]
-  list_parser = subparsers.add_parser("list")
-  list_parser.add_argument("list", choices=['repo', 'registry'])
-  
-  return vars(parser.parse_args())
+      Options:
+	-h         help (this message)
+        -r <file>     Read in PCAP
+        -w <dir|file> Write out data to directory or file
+        -I <image>    Docker image e.g. \`\`-I opennsm/bro:2.4.1''
+        --            Arguments passed to container e.g. \`\`-- pwd''
 
-def main():
-  args_dict = arguments()
-  option    = args_dict.keys()
-  arg       = args_dict.values()
+Usage: $0 -I {image} {-r <pcap>} {-w <dir|file>} -- [commands]
+e.g. $0 -r /pcaps/ctf.pcap -I opennsm/tcpdump:4.7.4 -- tcpdump -nnr input -c 10
+e.g. $0 -w \$PWD -r /pcaps/ctf.pcap -I opennsm/tcpdump:4.7.4 -- tcpdump -nnr input -c 10 -w \$PWD/out.pcap
 
-  usage()
+EOF
+exit 1
+}
 
-  #if option == 'list':
-  #  if arg == 'repo':
-  #    list_repo()
-  #  if arg == 'registry':
-  #    list_registry()
+function die(){
+  if [ -f ${COWSAY:-none} ]; then
+    $COWSAY -d "$*"
+  else
+    echo "$*"
+  fi
+  #if [ -f $IRCSAY ]; then
+  #  ( set +e; $IRCSAY "$IRC_CHAN" "$*" 2>/dev/null || true )
+  #fi
+  #[ $MAIL ] && echo "$*" | mail -s "[ContainNSM] error on $HOST" $EMAIL
+  exit 1
+}
 
-if __name__ == "__main__":
-  main()
+function hi(){
+  if [ -f ${COWSAY:-none} ]; then
+    $COWSAY "$*"
+  else
+    echo "$*"
+  fi
+  #if [ -f $IRCSAY ]; then
+  #  ( set +e; $IRCSAY "$IRC_CHAN" "$*" 2>/dev/null || true )
+  #fi
+  #[ $MAIL ] && echo "$*" | mail -s "[vagrant] PXE install information on $HOST" $EMAIL
+  return 0
+}
+
+argcheck(){
+  local num
+  num="$1"
+  [[ $ARGC -lt $num ]] && die "Missing arguments! Use \`\`-h'' for help."
+}
+
+options(){
+  # Check for arguments
+  argcheck 1
+
+  while getopts "hr:i:I:w:" OPTION $PARAMS
+  do
+    case $OPTION in
+      h) usage;;
+      i) NIC="$OPTARG";;
+      r) PCAP="$OPTARG";;
+      w) OUT="$OPTARG";;
+      I) IMAGE="$OPTARG";;
+      \?) die "Invalid option: -$OPTARG" >&2;;
+    esac
+  done
+  OUT=${OUT:-$PWD}
+}
+
+is_docker(){
+  which docker 1>/dev/null 2>/dev/null || die "Docker not found, check PATH"
+}
+
+is_pcap(){
+  local pcap
+  local is_pcap
+  pcap="$1"
+  [[ -f $pcap ]] || die "File $pcap not found or not file"
+  is_pcap=$(file $pcap 2>/dev/null)
+  [[ "$is_pcap" =~ "tcpdump capture file" ]] || die "Not a valid PCAP file"
+  return 0
+}
+
+is_nic(){
+  local nic
+  local is_nic
+  nic="$1"
+  [[ -f $nic ]] || die "Interface $nic not found or not file"
+  is_nic=$(docker run "$image" ls /sys/class/net/)
+  [[ "$is_nic" =~ "$NIC" ]] || die "Interface $NIC doesn't exist"
+  return 0
+}
+
+test_paths(){
+  local pcap
+  local out
+  pcap=$1
+  out=$2
+  [[ "$pcap" = /* ]] || die "Error: $pcap is not an absolute path!"
+  [[ "$out"  = /* ]] || die "Error: $OUT is not an absolute path!"
+  return 0
+}
+
+run(){
+  local image
+  local pcap
+  local cmdline
+  local cwd 
+
+  cwd=/home/opennsm
+  pcap="$1"
+  image="$2"
+  cmdline="$3"
+  #echo docker run -it -v "${pcap}:${cwd}/input:ro" -v "${OUT}:/output:rw" "$image" "$cmdline"
+  #exit
+  eval docker run -it -v "${pcap}:${cwd}/input:ro" -v "${OUT}:${OUT}:rw" "$image" "$cmdline"
+  [[ $? -ne 0 ]] && die "Container creation failed, check your options"
+}
+
+main(){
+  # Parse options and arguments
+  options
+  # Check for absolute paths
+  test_paths $PCAP $OUT
+  # Check for Docker
+  is_docker
+  # Check input file
+  is_pcap "$PCAP" && run "$PCAP" "$IMAGE" "$CMDLINE"
+}
+
+main
