@@ -49,7 +49,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
 
 ${Y}Usage:${N} ${MF}$0${N} ${Y}-I${N} {${WF}image${N}} [${Y}-r${N} ${WF}<pcap>${N}] [${Y}-w${N} ${WF}<dir|file>${N}] -- [${WF}commands${N}]
 e.g. $0 -r /pcaps/ctf.pcap -I opennsm/tcpdump:4.7.4 -- tcpdump -nnr input -c 10
-e.g. $0 -w $PWD -C $PWD  -I opennsm/bro:2.4 -- bro -i eth0
+e.g. $0 -w \$PWD -C \$PWD  -I opennsm/bro:2.4 -- bro -i eth0
 
 EOF
 exit 1
