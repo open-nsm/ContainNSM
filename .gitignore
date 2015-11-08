@@ -1,3 +1,6 @@
 .vagrant
 testing
 test
+.state
+*.pcap
+.bash*
