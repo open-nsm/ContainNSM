@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-#set -x
 COWSAY=/usr/games/cowsay
 LOGFILE=containnsm.log
 
 # Globals
 ARGC=$#
+ARG1="$1"
+shift 1
 ARGV="$@"
 PARAMS="${ARGV%%--*}"
 CMDLINE="${ARGV#*--}"
@@ -28,24 +29,32 @@ GB="${greenb}"
 MF="${magentaf}"
 WF="${whitef}"
 
-
 usage(){
 cat <<EOF
 
 ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${N}
 
-      ${B}Options:${N}
-	${Y}-h${N}            help (this message)
-        ${Y}-r${N} ${U}<file>${N}     Read in PCAP
-        ${Y}-w${N} ${U}<dir|file>${N} Write out data to directory or file
-        ${Y}-C${N} ${U}<workdir>${N}  Set working directory in container
-        ${Y}-I${N} ${U}<image>${N}    Docker image e.g. \`\`-I opennsm/bro:2.4.1''
-        ${Y}--${N}            Arguments passed to container e.g. \`\`-- pwd''
+      ${B}Subcommands:${N}
+        ${Y}help${N}            Help (this message)
+        ${Y}build${N}           Build an image from directory
+        ${Y}run${N}             Create a container from image
 
-${Y}Usage:${N} ${MF}$0${N} ${Y}-I${N} {${WF}image${N}} [${Y}-r${N} ${WF}<pcap>${N}] [${Y}-w${N} ${WF}<dir|file>${N}] -- [${WF}commands${N}]
-e.g. $0 -r /pcaps/ctf.pcap -I opennsm/tcpdump:4.7.4 -- tcpdump -nnr input -c 10
-e.g. $0 -w \$PWD -C \$PWD  -I opennsm/bro:2.4 -- bro -i eth0
+      ${B}Subcommand options:${N}
+        build ${U}<dir>${N}     Directory to Dockerfile
+        help            Help
+        run ${U}[options]${N}
+          ${WF}-r${N} ${U}<file>${N}     Read in PCAP (Mounts in container)
+          ${WF}-w${N} ${U}<dir|file>${N} Write out data to directory or file
+          ${WF}-C${N} ${U}<dir>${N}      Set working directory in container
+          ${WF}-I${N} ${U}<image>${N}    Docker image e.g. \`\`-I opennsm/bro:2.4.1''
+          ${WF}--${N}            Arguments passed to container e.g. \`\`-- bash''
 
+      ${B}Examples:${N}
+            $0 build bro/2.4.1
+            $0 run -r /pcaps/ctf.pcap -I opennsm/tcpdump:4.7.4 -- tcpdump -nnr ctf.pcap -c 10
+            $0 run -w \$PWD -C \$PWD  -I opennsm/bro:2.4 -- bro -i eth0
+
+${Y}Usage:${N} ${MF}$0${N} {${Y}-I${N} ${WF}<image>${N}} [${Y}-r${N} ${WF}<pcap>${N}] [${Y}-w${N} ${WF}<dir|file>${N}] -- [${WF}commands${N}]
 EOF
 exit 1
 }
@@ -63,7 +72,7 @@ function hi(){
   if [ -f ${COWSAY:-none} ]; then
     $COWSAY "$*"
   else
-    echo "$*"
+    echo "${WF}$*${N}"
   fi
   return 0
 }
@@ -71,25 +80,32 @@ function hi(){
 argcheck(){
   local num
   num="$1"
-  [[ $ARGC -lt $num ]] && die "Missing arguments! Use \`\`-h'' for help."
+  [[ $ARGC -lt $num ]] && die "Missing arguments! Use \`\`$0 help'' for help."
 }
 
 options(){
   # Check for arguments
   argcheck 1
 
-  while getopts "hC:r:i:I:w:" OPTION $PARAMS
-  do
-    case $OPTION in
-      h) usage;;
-      C) WORKDIR="$OPTARG";;
-      i) NIC="$OPTARG";;
-      r) PCAP="$OPTARG";;
-      w) OUT="$OPTARG";;
-      I) IMAGE="$OPTARG";;
-      \?) die "Invalid option: -$OPTARG" >&2;;
-    esac
-  done
+  [[ "$ARG1" == "help" ]] && usage
+  [[ "$ARG1" == "build" ]] && build "$PARAMS"
+
+  if [[ "$ARG1" == "run" ]]; then
+    while getopts "hC:r:i:I:w:" OPTION $PARAMS
+    do
+      case $OPTION in
+        h) usage;;
+        C) WORKDIR="$OPTARG";;
+        i) NIC="$OPTARG";;
+        r) PCAP="$OPTARG";;
+        w) WRITE=1; OUT="$OPTARG";;
+        I) IMAGE="$OPTARG";;
+        \?) die "Invalid option: -$OPTARG" >&2;;
+      esac
+    done
+    return 0
+  fi
+  die "Invalid option, please see help for subcommands: \`\`$0 help''"
 }
 
 is_docker(){
@@ -122,7 +138,7 @@ is_nic(){
 }
 
 test_paths(){
-  printf "${Y}Mount:${N}\t%s\n" "$OUT"  >&2
+  printf "${Y}Mount:${N}\t${WF}Host: ${N}%s ${MF}->${N} ${WF}Container: ${N}%s\n" "$OUT" "$OUT"  >&2
   printf "${Y}Cwd:${N}\t%s\n" "$WORKDIR" >&2
   printf "${Y}PCAP:${N}\t%s\n" "$PCAP" >&2
 
@@ -134,22 +150,39 @@ test_paths(){
 }
 
 config(){
-  OUT=${OUT:-$PWD}
-  PCAP=${PCAP:-none}
+  local cwd
+  home=/home/opennsm
+  OUT="${OUT:-$PWD}"
+  PCAP="${PCAP:-none}"
   [[ "$PCAP" = "none" ]] || PCAP_DIR=$(dirname "$PCAP")
-  WORKDIR=${WORKDIR:-$PCAP_DIR}
+  WORKDIR="${WORKDIR:-$PCAP_DIR}"
   [[ $WORKDIR ]] || WORKDIR="$PWD"
+  ! [[ "$WRITE" -eq 1 ]] && [[ "$PCAP" = "none" ]] && WORKDIR="$home"
+}
+
+build(){
+  local file
+  local image
+  local tag
+  dir=$1
+  [[ -d $dir ]] || die "$dir is not a directory or doesn't exist"
+  [[ $dir = */*/* ]] && dir=${dir%/*}
+  image="${dir%/*}"
+  tag="${dir#*/}"
+  name="${image}:${tag}"
+  docker build -t opennsm/$name - < $dir/Dockerfile
+  [[ $? -ne 0 ]] && die "Build failed, check your Dockerfile"
+  hi "Image created - try \`\`${MF}./containnsm run -I opennsm/$name -- bash${N}'' to test it out"
+  exit 0
 }
 
 run(){
   local pcap
   local cmdline
-  cwd=/home/opennsm
   pcap="$1"
   cmdline="$2"
   [[ $pcap = "none" ]] && eval docker run -it -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$IMAGE" "$cmdline"
   [[ $pcap != "none" ]] && eval docker run -it -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$IMAGE" "$cmdline"
-  [[ $? -ne 0 ]] && die "Container creation failed, check your options"
 }
 
 main(){
