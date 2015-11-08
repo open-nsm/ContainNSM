@@ -4,7 +4,7 @@ LOGFILE=containnsm.log
 
 # Globals
 ARGC=$#
-ARG1="$1"
+SUBCOMMAND="$1"
 shift 1
 ARGV="$@"
 PARAMS="${ARGV%%--*}"
@@ -87,10 +87,10 @@ options(){
   # Check for arguments
   argcheck 1
 
-  [[ "$ARG1" == "help" ]] && usage
-  [[ "$ARG1" == "build" ]] && build "$PARAMS"
+  [[ "$SUBCOMMAND" == "help" ]] && usage
+  [[ "$SUBCOMMAND" == "build" ]] && build "$PARAMS"
 
-  if [[ "$ARG1" == "run" ]]; then
+  if [[ "$SUBCOMMAND" == "run" ]]; then
     while getopts "hC:r:i:I:w:" OPTION $PARAMS
     do
       case $OPTION in
