@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 #set -x
-MAIL=$(which mail)
 COWSAY=/usr/games/cowsay
-IRCSAY=/usr/local/bin/ircsay
-IRC_CHAN="#replace_me"
-HOST=$(hostname -s)
 LOGFILE=containnsm.log
-EMAIL=user@company.com
 
 # Globals
 ARGC=$#
@@ -61,10 +56,6 @@ function die(){
   else
     echo "${RF}$*${N}"
   fi
-  #if [ -f $IRCSAY ]; then
-  #  ( set +e; $IRCSAY "$IRC_CHAN" "$*" 2>/dev/null || true )
-  #fi
-  #[ $MAIL ] && echo "$*" | mail -s "[ContainNSM] error on $HOST" $EMAIL
   exit 1
 }
 
@@ -74,10 +65,6 @@ function hi(){
   else
     echo "$*"
   fi
-  #if [ -f $IRCSAY ]; then
-  #  ( set +e; $IRCSAY "$IRC_CHAN" "$*" 2>/dev/null || true )
-  #fi
-  #[ $MAIL ] && echo "$*" | mail -s "[vagrant] PXE install information on $HOST" $EMAIL
   return 0
 }
 
