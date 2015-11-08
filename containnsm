@@ -14,21 +14,42 @@ ARGV="$@"
 PARAMS="${ARGV%%--*}"
 CMDLINE="${ARGV#*--}"
 
+normal="$(tput sgr0)"
+bold="$(tput bold)"
+underline="$(tput smul)"
+yellow="$(tput setaf 3)"
+redf="$(tput setaf 1)"
+magentaf="$(tput setaf 5)"
+whitef="$(tput setaf 7)"
+
+N="${normal}"
+B="${bold}"
+U="${underline}"
+Y="${yellow}"
+RF="${redf}"
+RB="${redb}"
+GF="${greenf}"
+GB="${greenb}"
+MF="${magentaf}"
+WF="${whitef}"
+
+
 usage(){
 cat <<EOF
 
-ContainNSM
+${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${N}
 
-      Options:
-	-h         help (this message)
-        -r <file>     Read in PCAP
-        -w <dir|file> Write out data to directory or file
-        -I <image>    Docker image e.g. \`\`-I opennsm/bro:2.4.1''
-        --            Arguments passed to container e.g. \`\`-- pwd''
+      ${B}Options:${N}
+	${Y}-h${N}            help (this message)
+        ${Y}-r${N} ${U}<file>${N}     Read in PCAP
+        ${Y}-w${N} ${U}<dir|file>${N} Write out data to directory or file
+        ${Y}-C${N} ${U}<workdir>${N}  Set working directory in container
+        ${Y}-I${N} ${U}<image>${N}    Docker image e.g. \`\`-I opennsm/bro:2.4.1''
+        ${Y}--${N}            Arguments passed to container e.g. \`\`-- pwd''
 
-Usage: $0 -I {image} {-r <pcap>} {-w <dir|file>} -- [commands]
+${Y}Usage:${N} ${MF}$0${N} ${Y}-I${N} {${WF}image${N}} [${Y}-r${N} ${WF}<pcap>${N}] [${Y}-w${N} ${WF}<dir|file>${N}] -- [${WF}commands${N}]
 e.g. $0 -r /pcaps/ctf.pcap -I opennsm/tcpdump:4.7.4 -- tcpdump -nnr input -c 10
-e.g. $0 -w \$PWD -r /pcaps/ctf.pcap -I opennsm/tcpdump:4.7.4 -- tcpdump -nnr input -c 10 -w \$PWD/out.pcap
+e.g. $0 -w $PWD -C $PWD  -I opennsm/bro:2.4 -- bro -i eth0
 
 EOF
 exit 1
@@ -38,7 +59,7 @@ function die(){
   if [ -f ${COWSAY:-none} ]; then
     $COWSAY -d "$*"
   else
-    echo "$*"
+    echo "${RF}$*${N}"
   fi
   #if [ -f $IRCSAY ]; then
   #  ( set +e; $IRCSAY "$IRC_CHAN" "$*" 2>/dev/null || true )
@@ -70,10 +91,11 @@ options(){
   # Check for arguments
   argcheck 1
 
-  while getopts "hr:i:I:w:" OPTION $PARAMS
+  while getopts "hC:r:i:I:w:" OPTION $PARAMS
   do
     case $OPTION in
       h) usage;;
+      C) WORKDIR="$OPTARG";;
       i) NIC="$OPTARG";;
       r) PCAP="$OPTARG";;
       w) OUT="$OPTARG";;
@@ -81,7 +103,6 @@ options(){
       \?) die "Invalid option: -$OPTARG" >&2;;
     esac
   done
-  OUT=${OUT:-$PWD}
 }
 
 is_docker(){
@@ -92,6 +113,11 @@ is_pcap(){
   local pcap
   local is_pcap
   pcap="$1"
+
+  # Read option not used
+  [[ $pcap == "none" ]] && return 0
+
+  # Test for valid PCAP
   [[ -f $pcap ]] || die "File $pcap not found or not file"
   is_pcap=$(file $pcap 2>/dev/null)
   [[ "$is_pcap" =~ "tcpdump capture file" ]] || die "Not a valid PCAP file"
@@ -109,40 +135,45 @@ is_nic(){
 }
 
 test_paths(){
-  local pcap
-  local out
-  pcap=$1
-  out=$2
-  [[ "$pcap" = /* ]] || die "Error: $pcap is not an absolute path!"
-  [[ "$out"  = /* ]] || die "Error: $OUT is not an absolute path!"
+  printf "${Y}Mount:${N}\t%s\n" "$OUT"  >&2
+  printf "${Y}Cwd:${N}\t%s\n" "$WORKDIR" >&2
+  printf "${Y}PCAP:${N}\t%s\n" "$PCAP" >&2
+
+  [[ "$OUT"     = /* ]]     || die "Error: $OUT is not an absolute path!"
+  [[ "$WORKDIR" = /* ]]     || die "Error: $workdir is not an absolute path!"
+  [[ "$PCAP"    = "none" ]] && return 0
+  [[ "$PCAP"    = /* ]]     || die "Error: $pcap is not an absolute path!"
   return 0
 }
 
+config(){
+  OUT=${OUT:-$PWD}
+  PCAP=${PCAP:-none}
+  [[ "$PCAP" = "none" ]] || PCAP_DIR=$(dirname "$PCAP")
+  WORKDIR=${WORKDIR:-$PCAP_DIR}
+  [[ $WORKDIR ]] || WORKDIR="$PWD"
+}
+
 run(){
-  local image
   local pcap
   local cmdline
-  local cwd 
-
   cwd=/home/opennsm
   pcap="$1"
-  image="$2"
-  cmdline="$3"
-  #echo docker run -it -v "${pcap}:${cwd}/input:ro" -v "${OUT}:/output:rw" "$image" "$cmdline"
-  #exit
-  eval docker run -it -v "${pcap}:${cwd}/input:ro" -v "${OUT}:${OUT}:rw" "$image" "$cmdline"
+  cmdline="$2"
+  [[ $pcap = "none" ]] && eval docker run -it -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$IMAGE" "$cmdline"
+  [[ $pcap != "none" ]] && eval docker run -it -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$IMAGE" "$cmdline"
   [[ $? -ne 0 ]] && die "Container creation failed, check your options"
 }
 
 main(){
-  # Parse options and arguments
   options
+  config
   # Check for absolute paths
-  test_paths $PCAP $OUT
+  test_paths
   # Check for Docker
   is_docker
   # Check input file
-  is_pcap "$PCAP" && run "$PCAP" "$IMAGE" "$CMDLINE"
+  is_pcap "${PCAP}" && run "${PCAP}" "$CMDLINE"
 }
 
 main
