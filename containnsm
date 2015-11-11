@@ -37,11 +37,13 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
       ${B}Subcommands:${N}
         ${Y}help${N}            Help (this message)
         ${Y}build${N}           Build an image from directory
+        ${Y}list${N}            List images in repository
         ${Y}run${N}             Create a container from image
 
       ${B}Subcommand options:${N}
         build ${U}<dir>${N}     Directory to Dockerfile
         help            Help
+        list ${U}[<dir>]${N}    List available images by tool
         run ${U}[options]${N}
           ${WF}-r${N} ${U}<file>${N}     Read in PCAP (Mounts in container)
           ${WF}-w${N} ${U}<dir|file>${N} Write out data to directory or file
@@ -89,6 +91,8 @@ options(){
 
   [[ "$SUBCOMMAND" == "help" ]] && usage
   [[ "$SUBCOMMAND" == "build" ]] && build "$PARAMS"
+
+  [[ "$SUBCOMMAND" == "list" ]] && list "$PARAMS"
 
   if [[ "$SUBCOMMAND" == "run" ]]; then
     while getopts "hC:r:i:I:w:" OPTION $PARAMS
@@ -158,6 +162,22 @@ config(){
   WORKDIR="${WORKDIR:-$PCAP_DIR}"
   [[ $WORKDIR ]] || WORKDIR="$PWD"
   ! [[ "$WRITE" -eq 1 ]] && [[ "$PCAP" = "none" ]] && WORKDIR="$home"
+}
+
+list(){
+  local dir
+  dir="$1"
+  [[ -f "$PWD"/.git/config ]] || die "You should be in containsnm repo"
+  if [[ "$dir" ]]; then
+    [[ -d "$dir" ]] || die "Tool directory $dir doesn't exist"
+  fi
+
+  printf "Repo/Image:Tag%32s\n" "Dir/Dir"
+  for image in ${dir:-*}/*
+  do
+    printf "opennnsm/${image/\//:}%30s\n" "$image"
+  done
+  exit 0
 }
 
 build(){
