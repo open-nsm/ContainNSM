@@ -48,7 +48,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
         list ${U}[<dir>]${N}    List available images by tool
         run|grouprun ${U}[options]${N}
           ${WF}-i${N}            Share network interfaces with host
-          ${WF}-r${N} ${U}<file>${N}     Read in PCAP (Mounts in container)
+          ${WF}-r${N} ${U}<file>${N}     Read in file, mostly PCAP (Mounts in container)
           ${WF}-w${N} ${U}<dir|file>${N} Write out data to directory or file
           ${WF}-C${N} ${U}<dir>${N}      Set working directory in container
           ${WF}-I${N} ${U}<image>${N}    Docker image e.g. \`\`-I bro:2.4.1''
@@ -131,7 +131,7 @@ is_pcap(){
   # Test for valid PCAP
   [[ -f $pcap ]] || die "File $pcap not found or not file"
   is_pcap=$(file $pcap 2>/dev/null)
-  [[ "$is_pcap" =~ "tcpdump capture file" ]] || die "Not a valid PCAP file"
+  [[ "$is_pcap" =~ "tcpdump capture file" ]] || hi "Not a valid PCAP file..maybe this was intentional" >&2
   return 0
 }
 
