@@ -176,7 +176,7 @@ list(){
     [[ -d "$dir" ]] || die "Tool directory $dir doesn't exist"
   fi
 
-  printf "Repo/Image:Tag%32s\n" "Dir/Dir" >&2
+  [[ "$SUBCOMMAND" == "list" ]] && printf "Repo/Image:Tag%32s\n" "Dir/Dir" >&2
   for image in ${dir:-*}/*
   do
     ! [[ $print ]] && printf "opennnsm/${image/\//:}%30s\n" "$image"
@@ -215,7 +215,7 @@ run(){
 
 grouprun(){
   group=$(list "${IMAGE/opennsm\//}" "listrepo")
-  printf "${WF}Missing images will attempt to be pulled down...${N}\n" >&2
+  printf "${WF}I will attempt to pull missing images...${N}\n" >&2
   for image in $group; do
     run "${PCAP}" "$CMDLINE" "$image"
   done
