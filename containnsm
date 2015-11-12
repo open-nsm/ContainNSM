@@ -47,6 +47,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
         help            Help
         list ${U}[<dir>]${N}    List available images by tool
         run|grouprun ${U}[options]${N}
+          ${WF}-i${N}            Share network interfaces with host
           ${WF}-r${N} ${U}<file>${N}     Read in PCAP (Mounts in container)
           ${WF}-w${N} ${U}<dir|file>${N} Write out data to directory or file
           ${WF}-C${N} ${U}<dir>${N}      Set working directory in container
@@ -57,6 +58,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
             $0 build bro/2.4.1
             $0 run -r /pcaps/ctf.pcap -I tcpdump:4.7.4 -- tcpdump -nr ctf.pcap -c 10
             $0 run -w \$PWD -C \$PWD  -I bro:2.4 -- bro -i eth0
+            $0 run -I tcpdump -i -- tcpdump -ni docker0
             $0 grouprun -r \$PWD/ctf.pcap -I tcpdump -- tcpdump -nr ctf.pcap -c 1 udp
 
 ${Y}Usage:${N} ${MF}$0${N} ${WF}sub${N} {${Y}-I${N} ${WF}image${N}} [${Y}-r${N} ${WF}pcap${N}] [${Y}-w${N} ${WF}dir|file${N}] -- [${WF}commands${N}]
@@ -97,12 +99,12 @@ options(){
   [[ "$SUBCOMMAND" == "list"     ]] && list     "$PARAMS" && exit 0
 
   if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
-    while getopts "hC:r:i:I:w:" OPTION $PARAMS
+    while getopts "hC:ir:I:w:" OPTION $PARAMS
     do
       case $OPTION in
         h) usage;;
         C) WORKDIR="$OPTARG";;
-        i) NIC="$OPTARG";;
+        i) NET="true";;
         r) PCAP="$OPTARG";;
         w) WRITE=1; OUT="$OPTARG";;
         I) IMAGE="${REPO}/${OPTARG}";;
@@ -133,19 +135,10 @@ is_pcap(){
   return 0
 }
 
-is_nic(){
-  local nic
-  local is_nic
-  nic="$1"
-  [[ -f $nic ]] || die "Interface $nic not found or not file"
-  is_nic=$(docker run "$image" ls /sys/class/net/)
-  [[ "$is_nic" =~ "$NIC" ]] || die "Interface $NIC doesn't exist"
-  return 0
-}
-
 test_paths(){
   printf "${Y}Mount:${N}\t${WF}Host: ${N}%s ${MF}->${N} ${WF}Container: ${N}%s\n" "$OUT" "$OUT"  >&2
   printf "${Y}Cwd:${N}\t%s\n" "$WORKDIR" >&2
+  printf "${Y}HostNet:${N}\t%s\n" "${NET:-false}" >&2
   printf "${Y}PCAP:${N}\t%s\n" "$PCAP" >&2
 
   [[ "$OUT"     = /* ]]     || die "Error: $OUT is not an absolute path!"
@@ -209,9 +202,10 @@ run(){
   cmdline="$2"
   image="$3"
   [[ "$ARGV" =~ '--' ]] || die "Error: Missing container arguments e.g. \`\`$0 ... -- bash''"
+  [[ "$NET" == "true" ]] && NET="--net=host" || unset NET
   printf "${Y}Image:${N} ${image:-$IMAGE}\n" >&2
-  [[ $pcap = "none" ]] && eval docker run -it -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
-  [[ $pcap != "none" ]] && eval docker run -it -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
+  [[ $pcap = "none" ]] && eval docker run -it "$NET" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
+  [[ $pcap != "none" ]] && eval docker run -it "$NET" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
 }
 
 grouprun(){
