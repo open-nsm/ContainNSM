@@ -208,7 +208,7 @@ run(){
   pcap="$1"
   cmdline="$2"
   image="$3"
-  [[ "$CMDLINE" =~ '--' ]] || die "Error: Missing container arguments e.g. \`\`$0 ... -- bash''"
+  [[ "$ARGV" =~ '--' ]] || die "Error: Missing container arguments e.g. \`\`$0 ... -- bash''"
   printf "${Y}Image:${N} ${image:-$IMAGE}\n" >&2
   [[ $pcap = "none" ]] && eval docker run -it -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
   [[ $pcap != "none" ]] && eval docker run -it -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
