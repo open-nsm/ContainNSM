@@ -4,3 +4,4 @@ test
 .state
 *.pcap
 .bash*
+tmp/

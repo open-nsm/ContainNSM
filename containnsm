@@ -9,6 +9,7 @@ shift 1
 ARGV="$@"
 PARAMS="${ARGV%%--*}"
 CMDLINE="${ARGV#*--}"
+REPO=opennsm
 
 normal="$(tput sgr0)"
 bold="$(tput bold)"
@@ -39,24 +40,26 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
         ${Y}build${N}           Build an image from directory
         ${Y}list${N}            List images in repository
         ${Y}run${N}             Create a container from image
+        ${Y}grouprun${N}        Create a group of containers
 
       ${B}Subcommand options:${N}
         build ${U}<dir>${N}     Directory to Dockerfile
         help            Help
         list ${U}[<dir>]${N}    List available images by tool
-        run ${U}[options]${N}
+        run|grouprun ${U}[options]${N}
           ${WF}-r${N} ${U}<file>${N}     Read in PCAP (Mounts in container)
           ${WF}-w${N} ${U}<dir|file>${N} Write out data to directory or file
           ${WF}-C${N} ${U}<dir>${N}      Set working directory in container
-          ${WF}-I${N} ${U}<image>${N}    Docker image e.g. \`\`-I opennsm/bro:2.4.1''
+          ${WF}-I${N} ${U}<image>${N}    Docker image e.g. \`\`-I bro:2.4.1''
           ${WF}--${N}            Arguments passed to container e.g. \`\`-- bash''
 
       ${B}Examples:${N}
             $0 build bro/2.4.1
-            $0 run -r /pcaps/ctf.pcap -I opennsm/tcpdump:4.7.4 -- tcpdump -nnr ctf.pcap -c 10
-            $0 run -w \$PWD -C \$PWD  -I opennsm/bro:2.4 -- bro -i eth0
+            $0 run -r /pcaps/ctf.pcap -I tcpdump:4.7.4 -- tcpdump -nr ctf.pcap -c 10
+            $0 run -w \$PWD -C \$PWD  -I bro:2.4 -- bro -i eth0
+            $0 grouprun -r \$PWD/ctf.pcap -I tcpdump -- tcpdump -nr ctf.pcap -c 1 udp
 
-${Y}Usage:${N} ${MF}$0${N} {${Y}-I${N} ${WF}<image>${N}} [${Y}-r${N} ${WF}<pcap>${N}] [${Y}-w${N} ${WF}<dir|file>${N}] -- [${WF}commands${N}]
+${Y}Usage:${N} ${MF}$0${N} ${WF}sub${N} {${Y}-I${N} ${WF}image${N}} [${Y}-r${N} ${WF}pcap${N}] [${Y}-w${N} ${WF}dir|file${N}] -- [${WF}commands${N}]
 EOF
 exit 1
 }
@@ -89,12 +92,11 @@ options(){
   # Check for arguments
   argcheck 1
 
-  [[ "$SUBCOMMAND" == "help" ]] && usage
-  [[ "$SUBCOMMAND" == "build" ]] && build "$PARAMS"
+  [[ "$SUBCOMMAND" == "help"     ]] && usage
+  [[ "$SUBCOMMAND" == "build"    ]] && build    "$PARAMS" && exit 0
+  [[ "$SUBCOMMAND" == "list"     ]] && list     "$PARAMS" && exit 0
 
-  [[ "$SUBCOMMAND" == "list" ]] && list "$PARAMS"
-
-  if [[ "$SUBCOMMAND" == "run" ]]; then
+  if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
     while getopts "hC:r:i:I:w:" OPTION $PARAMS
     do
       case $OPTION in
@@ -103,7 +105,7 @@ options(){
         i) NIC="$OPTARG";;
         r) PCAP="$OPTARG";;
         w) WRITE=1; OUT="$OPTARG";;
-        I) IMAGE="$OPTARG";;
+        I) IMAGE="${REPO}/${OPTARG}";;
         \?) die "Invalid option: -$OPTARG" >&2;;
       esac
     done
@@ -155,7 +157,7 @@ test_paths(){
 
 config(){
   local cwd
-  home=/home/opennsm
+  home=/home/${REPO}
   OUT="${OUT:-$PWD}"
   PCAP="${PCAP:-none}"
   [[ "$PCAP" = "none" ]] || PCAP_DIR=$(dirname "$PCAP")
@@ -166,18 +168,21 @@ config(){
 
 list(){
   local dir
+  local print
   dir="$1"
+  print="$2"
   [[ -f "$PWD"/.git/config ]] || die "You should be in containsnm repo"
   if [[ "$dir" ]]; then
     [[ -d "$dir" ]] || die "Tool directory $dir doesn't exist"
   fi
 
-  printf "Repo/Image:Tag%32s\n" "Dir/Dir"
+  printf "Repo/Image:Tag%32s\n" "Dir/Dir" >&2
   for image in ${dir:-*}/*
   do
-    printf "opennnsm/${image/\//:}%30s\n" "$image"
+    ! [[ $print ]] && printf "opennnsm/${image/\//:}%30s\n" "$image"
+    [[ $print ]] && printf "opennnsm/${image/\//:}\n"
   done
-  exit 0
+  return 0
 }
 
 build(){
@@ -190,19 +195,30 @@ build(){
   image="${dir%/*}"
   tag="${dir#*/}"
   name="${image}:${tag}"
-  docker build -t opennsm/$name - < $dir/Dockerfile
+  docker build -t ${REPO}/${name} - < $dir/Dockerfile
   [[ $? -ne 0 ]] && die "Build failed, check your Dockerfile"
-  hi "Image created - try \`\`${MF}./containnsm run -I opennsm/$name -- bash${N}'' to test it out"
-  exit 0
+  hi "Image created - try \`\`${MF}./containnsm run -I ${REPO}/${name} -- bash${N}'' to test it out"
+  return 0
 }
 
 run(){
   local pcap
   local cmdline
+  local image
   pcap="$1"
   cmdline="$2"
-  [[ $pcap = "none" ]] && eval docker run -it -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$IMAGE" "$cmdline"
-  [[ $pcap != "none" ]] && eval docker run -it -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$IMAGE" "$cmdline"
+  image="$3"
+  printf "${Y}Image:${N} ${image:-$IMAGE}\n" >&2
+  [[ $pcap = "none" ]] && eval docker run -it -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
+  [[ $pcap != "none" ]] && eval docker run -it -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
+}
+
+grouprun(){
+  group=$(list "${IMAGE/opennsm\//}" "listrepo")
+  printf "${WF}Missing images will attempt to be pulled down...${N}\n" >&2
+  for image in $group; do
+    run "${PCAP}" "$CMDLINE" "$image"
+  done
 }
 
 main(){
@@ -213,7 +229,10 @@ main(){
   # Check for Docker
   is_docker
   # Check input file
-  is_pcap "${PCAP}" && run "${PCAP}" "$CMDLINE"
+  [[ $PCAP ]] && is_pcap "${PCAP}"
+
+  [[ "$SUBCOMMAND" == "run" ]] && run "${PCAP}" "$CMDLINE"
+  [[ "$SUBCOMMAND" == "grouprun" ]] && grouprun "$PARAMS"
 }
 
 main
