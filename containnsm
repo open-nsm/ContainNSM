@@ -136,9 +136,9 @@ is_pcap(){
 }
 
 test_paths(){
-  printf "${Y}Mount:${N}\t${WF}Host: ${N}%s ${MF}->${N} ${WF}Container: ${N}%s\n" "$OUT" "$OUT"  >&2
+  printf "${Y}Mount:${N} ${WF}Host: ${N}%s\n    ${MF}->${N} ${WF}Container: ${N}%s\n" "$OUT" "$OUT"  >&2
   printf "${Y}Cwd:${N}\t%s\n" "$WORKDIR" >&2
-  printf "${Y}HostNet:${N}\t%s\n" "${NET:-false}" >&2
+  printf "${Y}HostNet:${N}%6s\n" "${NET}" >&2
   printf "${Y}PCAP:${N}\t%s\n" "$PCAP" >&2
 
   [[ "$OUT"     = /* ]]     || die "Error: $OUT is not an absolute path!"
@@ -157,6 +157,7 @@ config(){
   WORKDIR="${WORKDIR:-$PCAP_DIR}"
   [[ $WORKDIR ]] || WORKDIR="$PWD"
   ! [[ "$WRITE" -eq 1 ]] && [[ "$PCAP" = "none" ]] && WORKDIR="$home"
+  [[ "$NET" == "true" ]] || NET="false"
 }
 
 list(){
@@ -203,7 +204,7 @@ run(){
   image="$3"
   [[ "$ARGV" =~ '--' ]] || die "Error: Missing container arguments e.g. \`\`$0 ... -- bash''"
   [[ "$NET" == "true" ]] && NET="--net=host" || unset NET
-  printf "${Y}Image:${N} ${image:-$IMAGE}\n" >&2
+  printf "${Y}Image:${N}\t%s\n" "${image:-$IMAGE}" >&2
   [[ $pcap = "none" ]] && eval docker run -it "$NET" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
   [[ $pcap != "none" ]] && eval docker run -it "$NET" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
 }
