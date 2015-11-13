@@ -8,7 +8,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # All Vagrant configuration is done here.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "ubuntu-vivid"
+  config.vm.box = "trusty"
 
   # The url from where the 'config.vm.box' box will be fetched if it doesn't exist
   config.vm.box_url = "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
