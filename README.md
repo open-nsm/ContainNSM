@@ -14,6 +14,10 @@ OpenNSM's Docker image collection of NSM tools and software to effectively utili
 
 ### Prerequisites
 
+* OSX: Boot2Docker or Docker Toolbox
+* Linux: Docker Engine
+* Windows: Docker Toolbox, Bash/Cygwin
+
 ## Use
 
 #### Layout
