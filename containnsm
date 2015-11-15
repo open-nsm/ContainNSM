@@ -39,20 +39,21 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
         ${Y}help${N}            Help (this message)
         ${Y}build${N}           Build an image from directory
         ${Y}list${N}            List images in repository
+        ${Y}listinstalled${N}   List installed images
         ${Y}run${N}             Create a container from image
         ${Y}grouprun${N}        Create a group of containers
 
       ${B}Subcommand options:${N}
-        build ${U}<dir>${N}     Directory to Dockerfile
-        help            Help
-        list ${U}[<dir>]${N}    List available images by tool
+        build ${U}<dir>${N}                Directory to Dockerfile
+        help                       Help
+        list|listinstalled ${U}[<dir>]${N} List available images by tool
         run|grouprun ${U}[options]${N}
-          ${WF}-i${N}            Share network interfaces with host
-          ${WF}-r${N} ${U}<file>${N}     Read in file, mostly PCAP (Mounts in container)
-          ${WF}-w${N} ${U}<dir|file>${N} Write out data to directory or file
-          ${WF}-C${N} ${U}<dir>${N}      Set working directory in container
-          ${WF}-I${N} ${U}<image>${N}    Docker image e.g. \`\`-I bro:2.4.1''
-          ${WF}--${N}            Arguments passed to container e.g. \`\`-- bash''
+          ${WF}-i${N}                       Share network interfaces with host
+          ${WF}-r${N} ${U}<file>${N}                Read in file, mostly PCAP (Mounts in container)
+          ${WF}-w${N} ${U}<dir|file>${N}            Write out data to directory or file
+          ${WF}-C${N} ${U}<dir>${N}                 Set working directory in container
+          ${WF}-I${N} ${U}<image>${N}               Docker image e.g. \`\`-I bro:2.4.1''
+          ${WF}--${N}                       Arguments passed to container e.g. \`\`-- bash''
 
       ${B}Examples:${N}
             $0 build bro/2.4.1
@@ -94,9 +95,10 @@ options(){
   # Check for arguments
   argcheck 1
 
-  [[ "$SUBCOMMAND" == "help"     ]] && usage
-  [[ "$SUBCOMMAND" == "build"    ]] && build    "$PARAMS" && exit 0
-  [[ "$SUBCOMMAND" == "list"     ]] && list     "$PARAMS" && exit 0
+  [[ "$SUBCOMMAND" == "help"     ]]      && usage
+  [[ "$SUBCOMMAND" == "build"    ]]      && build "$PARAMS" && exit 0
+  [[ "$SUBCOMMAND" == "list"     ]]      && list  "$PARAMS" && exit 0
+  [[ "$SUBCOMMAND" == "listinstalled" ]] && listinstalled "$PARAMS" && exit 0
 
   if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
     while getopts "hC:ir:I:w:" OPTION $PARAMS
@@ -160,16 +162,26 @@ config(){
   [[ "$NET" == "true" ]] || NET="false"
 }
 
-list(){
+is_repo(){
+  [[ -f "$PWD"/.git/config ]] || die "You run $0 from containsnm repo"
+}
+
+is_dir(){
   local dir
   local print
   dir="$1"
-  print="$2"
-  [[ -f "$PWD"/.git/config ]] || die "You should be in containsnm repo"
   if [[ "$dir" ]]; then
     [[ -d "$dir" ]] || die "Tool directory $dir doesn't exist"
   fi
+}
 
+
+list(){
+  local dir
+  local print
+  dir="${1%/}"
+  print="$2"
+  is_dir "$dir"
   [[ "$SUBCOMMAND" == "list" ]] && printf "Repo/Image:Tag%32s\n" "Dir/Dir" >&2
   for image in ${dir:-*}/*
   do
@@ -177,6 +189,16 @@ list(){
     [[ $print ]] && printf "opennnsm/${image/\//:}\n"
   done
   return 0
+}
+
+listinstalled(){
+  local tool
+  tool="${1%/}"
+  if [[ $tool ]]; then
+    docker images -f "label=program=$tool" 
+  else
+    docker images -f "label=organization=$REPO" 
+  fi
 }
 
 build(){
@@ -218,6 +240,8 @@ grouprun(){
 }
 
 main(){
+  # Check if we're in repo
+  is_repo
   options
   config
   # Check for absolute paths
