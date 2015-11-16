@@ -60,11 +60,11 @@ Options:
 * List all available images and locations, installed or not
   * `./containnsm list`
 * List all installed OpenNSM images
-  * `docker images -f 'label=organization=opennsm'`
+  * `./containnsm listinstalled`
 * List available image names and locations by tool, installed or not
   * `./containnsm list bro`
 * List installed image names
-  * `docker images -f 'label=program=bro'`
+  * `./containnsm listinstalled bro`
 
 #### Running Containers
 
