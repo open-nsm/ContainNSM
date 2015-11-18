@@ -91,6 +91,8 @@ argcheck(){
   [[ $ARGC -lt $num ]] && die "Missing arguments! Use \`\`$0 help'' for help."
 }
 
+trap 'die "Trap recieved, exiting...";' 1 2 3 20
+
 options(){
   # Check for arguments
   argcheck 1
