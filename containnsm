@@ -217,6 +217,12 @@ build(){
   return 0
 }
 
+is_image(){
+  local image
+  image="$1"
+  [[ "${image}" ]] || die "No image specified, try \`\`-I <image>''"
+}
+
 run(){
   local pcap
   local cmdline
@@ -243,6 +249,8 @@ main(){
   # Check if we're in repo
   is_repo
   options
+  # Test if image was given
+  is_image "$IMAGE"
   config
   # Check for absolute paths
   test_paths
@@ -250,7 +258,6 @@ main(){
   is_docker
   # Check input file
   [[ $PCAP ]] && is_pcap "${PCAP}"
-
   [[ "$SUBCOMMAND" == "run" ]] && run "${PCAP}" "$CMDLINE"
   [[ "$SUBCOMMAND" == "grouprun" ]] && grouprun "$PARAMS"
 }
