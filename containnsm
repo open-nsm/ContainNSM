@@ -187,8 +187,8 @@ list(){
   [[ "$SUBCOMMAND" == "list" ]] && printf "Repo/Image:Tag%32s\n" "Dir/Dir" >&2
   for image in ${dir:-*}/*
   do
-    ! [[ $print ]] && printf "opennnsm/${image/\//:}%30s\n" "$image"
-    [[ $print ]] && printf "opennnsm/${image/\//:}\n"
+    ! [[ $print ]] && printf "opennsm/${image/\//:}%30s\n" "$image"
+    [[ $print ]] && printf "opennsm/${image/\//:}\n"
   done
   return 0
 }
