@@ -165,7 +165,9 @@ config(){
 }
 
 is_repo(){
-  [[ -f "$PWD"/.git/config ]] || die "You run $0 from containsnm repo"
+  local sub
+  sub="$1"
+  [[ -f "$PWD"/.git/config ]] || die "$0 $sub must be run from containsnm repo"
 }
 
 is_dir(){
@@ -181,6 +183,7 @@ is_dir(){
 list(){
   local dir
   local print
+  is_repo $FUNCNAME
   dir="${1%/}"
   print="$2"
   is_dir "$dir"
@@ -207,6 +210,7 @@ build(){
   local file
   local image
   local tag
+  is_repo $FUNCNAME
   dir=$1
   [[ -d $dir ]] || die "$dir is not a directory or doesn't exist"
   [[ $dir = */*/* ]] && dir=${dir%/*}
@@ -248,8 +252,6 @@ grouprun(){
 }
 
 main(){
-  # Check if we're in repo
-  is_repo
   options
   # Test if image was given
   is_image "$IMAGE"
