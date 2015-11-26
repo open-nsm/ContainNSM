@@ -10,6 +10,7 @@ ARGV="$@"
 PARAMS="${ARGV%%--*}"
 CMDLINE="${ARGV#*--}"
 REPO=opennsm
+USER=opennsm
 
 normal="$(tput sgr0)"
 bold="$(tput bold)"
@@ -51,6 +52,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
           ${WF}-i${N}                       Share network interfaces with host
           ${WF}-r${N} ${U}<file>${N}                Read in file, mostly PCAP (Mounts in container)
           ${WF}-w${N} ${U}<dir|file>${N}            Write out data to directory or file
+          ${WF}-u${N} ${U}<user>${N}                User in container (def: opennsm)
           ${WF}-C${N} ${U}<dir>${N}                 Set working directory in container
           ${WF}-I${N} ${U}<image>${N}               Docker image e.g. \`\`-I bro:2.4.1''
           ${WF}--${N}                       Arguments passed to container e.g. \`\`-- bash''
@@ -103,13 +105,14 @@ options(){
   [[ "$SUBCOMMAND" == "listinstalled" ]] && listinstalled "$PARAMS" && exit 0
 
   if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
-    while getopts "hC:ir:I:w:" OPTION $PARAMS
+    while getopts "hC:ir:I:w:u:" OPTION $PARAMS
     do
       case $OPTION in
         h) usage;;
         C) WORKDIR="$OPTARG";;
         i) NET="true";;
         r) PCAP="$OPTARG";;
+        u) USER="$OPTARG";;
         w) WRITE=1; OUT="$OPTARG";;
         I) IMAGE="${REPO}/${OPTARG}";;
         \?) die "Invalid option: -$OPTARG" >&2;;
@@ -239,8 +242,8 @@ run(){
   [[ "$ARGV" =~ '--' ]] || die "Error: Missing container arguments e.g. \`\`$0 ... -- bash''"
   [[ "$NET" == "true" ]] && NET="--net=host" || unset NET
   printf "${Y}Image:${N}\t%s\n" "${image:-$IMAGE}" >&2
-  [[ $pcap = "none" ]] && eval docker run -it "$NET" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
-  [[ $pcap != "none" ]] && eval docker run -it "$NET" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
+  [[ $pcap = "none" ]] && eval docker run -it "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
+  [[ $pcap != "none" ]] && eval docker run -it "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
 }
 
 grouprun(){

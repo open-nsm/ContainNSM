@@ -1,7 +1,7 @@
 .PHONY: default help install pull update
 
 PROG 		= containnsm
-VERSION         = 0.1
+VERSION         = 0.2
 INSTALL_DIR 	= /usr/local/bin
 MAN_DIR 	= /usr/share/man
 Q 		= @
