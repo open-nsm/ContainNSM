@@ -231,7 +231,7 @@ build(){
 groupbuild(){
   local dir
   local version
-  dir="$1"
+  dir="${1%/*}"
   [[ -d "$dir" ]] || die "$dir is not a tool directory or doesn't exist"
   for version in $dir/*;
   do
