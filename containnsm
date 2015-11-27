@@ -38,14 +38,15 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
 
       ${B}Subcommands:${N}
         ${Y}help${N}            Help (this message)
-        ${Y}build${N}           Build an image from directory
+        ${Y}build${N}           Build an image from version directory
+        ${Y}groupbuild${N}      Build all image versions from tool directory
         ${Y}list${N}            List images in repository
         ${Y}listinstalled${N}   List installed images
         ${Y}run${N}             Create a container from image
         ${Y}grouprun${N}        Create a group of containers
 
       ${B}Subcommand options:${N}
-        build ${U}<dir>${N}                Directory to Dockerfile
+        build|groupbuild ${U}<dir>${N}     Directory to Dockerfile
         help                       Help
         list|listinstalled ${U}[<dir>]${N} List available images by tool
         run|grouprun ${U}[options]${N}
@@ -71,18 +72,18 @@ exit 1
 
 function die(){
   if [ -f ${COWSAY:-none} ]; then
-    $COWSAY -d "$*"
+    $COWSAY -d "$*" >&2
   else
-    echo "${RF}$*${N}"
+    echo "${RF}$*${N}" >&2
   fi
   exit 1
 }
 
 function hi(){
   if [ -f ${COWSAY:-none} ]; then
-    $COWSAY "$*"
+    $COWSAY "$*" >&2
   else
-    echo "${WF}$*${N}"
+    echo "${WF}$*${N}" >&2
   fi
   return 0
 }
@@ -99,9 +100,10 @@ options(){
   # Check for arguments
   argcheck 1
 
-  [[ "$SUBCOMMAND" == "help"     ]]      && usage
-  [[ "$SUBCOMMAND" == "build"    ]]      && build "$PARAMS" && exit 0
-  [[ "$SUBCOMMAND" == "list"     ]]      && list  "$PARAMS" && exit 0
+  [[ "$SUBCOMMAND" == "help"          ]] && usage
+  [[ "$SUBCOMMAND" == "build"         ]] && build "$PARAMS" && exit 0
+  [[ "$SUBCOMMAND" == "groupbuild"    ]] && groupbuild "$PARAMS" && exit 0
+  [[ "$SUBCOMMAND" == "list"          ]] && list  "$PARAMS" && exit 0
   [[ "$SUBCOMMAND" == "listinstalled" ]] && listinstalled "$PARAMS" && exit 0
 
   if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
@@ -224,6 +226,18 @@ build(){
   [[ $? -ne 0 ]] && die "Build failed, check your Dockerfile"
   hi "Image created - try \`\`${MF}./containnsm run -I ${REPO}/${name} -- bash${N}'' to test it out"
   return 0
+}
+
+groupbuild(){
+  local dir
+  local version
+  dir="$1"
+  [[ -d "$dir" ]] || die "$dir is not a tool directory or doesn't exist"
+  for version in $dir/*;
+  do
+    [[ -d "$version" ]] && build $version
+  done
+  hi "$FUNCNAME complete"
 }
 
 is_image(){
