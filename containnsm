@@ -74,7 +74,7 @@ function die(){
   if [ -f ${COWSAY:-none} ]; then
     $COWSAY -d "$*" >&2
   else
-    echo "${RF}$*${N}" >&2
+    printf "${RF}$*${N}\n" >&2
   fi
   exit 1
 }
@@ -83,7 +83,7 @@ function hi(){
   if [ -f ${COWSAY:-none} ]; then
     $COWSAY "$*" >&2
   else
-    echo "${WF}$*${N}" >&2
+    printf "${WF}$*${N}\n" >&2
   fi
   return 0
 }
@@ -266,6 +266,7 @@ grouprun(){
   for image in $group; do
     run "${PCAP}" "$CMDLINE" "$image"
   done
+  hi "$FUNCNAME complete"
 }
 
 main(){
