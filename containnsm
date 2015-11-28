@@ -116,7 +116,7 @@ options(){
         r) PCAP="$OPTARG";;
         u) USER="$OPTARG";;
         w) WRITE=1; OUT="$OPTARG";;
-        I) IMAGE="${REPO}/${OPTARG}";;
+        I) IMAGE="${OPTARG}";;
         \?) die "Invalid option: -$OPTARG" >&2;;
       esac
     done
@@ -252,19 +252,25 @@ run(){
   local image
   pcap="$1"
   cmdline="$2"
-  image="$3"
+  image="${3:-$IMAGE}"
+  image="${image/\//:}"
+  image="$REPO/$image"
   [[ "$ARGV" =~ '--' ]] || die "Error: Missing container arguments e.g. \`\`$0 ... -- bash''"
   [[ "$NET" == "true" ]] && NET="--net=host" || unset NET
-  printf "${Y}Image:${N}\t%s\n" "${image:-$IMAGE}" >&2
-  [[ $pcap = "none" ]] && eval docker run -it "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
-  [[ $pcap != "none" ]] && eval docker run -it "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "${IMAGE:-$image}" "$cmdline"
+  printf "${Y}Image:${N}\t%s\n" "$image" >&2
+  [[ $pcap = "none" ]] && eval docker run -it "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
+  [[ $pcap != "none" ]] && eval docker run -it "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
 }
 
 grouprun(){
-  group=$(list "${IMAGE/opennsm\//}" "listrepo")
+  local image
+  image="${IMAGE}"
+  image="${image%:*}"
+  image="${image%%/*}"
+  group=$(list "${image/opennsm\//}" "listrepo")
   printf "${WF}I will attempt to pull missing images...${N}\n" >&2
-  for image in $group; do
-    run "${PCAP}" "$CMDLINE" "$image"
+  for tool in $group; do
+    run "${PCAP}" "$CMDLINE" "${tool#*/}"
   done
   hi "$FUNCNAME complete"
 }
