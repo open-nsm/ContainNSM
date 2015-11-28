@@ -70,7 +70,7 @@ EOF
 exit 1
 }
 
-function die(){
+die(){
   if [ -f ${COWSAY:-none} ]; then
     $COWSAY -d "$*" >&2
   else
@@ -79,7 +79,7 @@ function die(){
   exit 1
 }
 
-function hi(){
+hi(){
   if [ -f ${COWSAY:-none} ]; then
     $COWSAY "$*" >&2
   else
