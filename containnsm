@@ -224,7 +224,7 @@ build(){
   name="${image}:${tag}"
   docker build -t ${REPO}/${name} - < $dir/Dockerfile
   [[ $? -ne 0 ]] && die "Build failed, check your Dockerfile"
-  hi "Image created - try \`\`${MF}./containnsm run -I ${REPO}/${name} -- bash${N}'' to test it out"
+  hi "Image created - try \`\`${MF}./containnsm run -I ${name} -- bash${N}'' to test it out"
   return 0
 }
 
