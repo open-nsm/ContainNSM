@@ -104,5 +104,7 @@ send them to bitbucket with `2>/dev/null`
 
 Graph throughput on Docker host's eth0 interface while downloading a Docker
 image of Bro 2.4.
-`./containnsm run -I speedometer:2.8 -i -- speedometer -rx eth0`
+
+* `./containnsm run -I speedometer:2.8 -i -- speedometer -rx eth0`
+
 ![Speedometer](http://www.open-nsm.net/images/containnsm/speedometer.png)
