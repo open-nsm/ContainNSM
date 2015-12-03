@@ -99,3 +99,10 @@ send them to bitbucket with `2>/dev/null`
   * `./containnsm run -w $PWD -I bro -- bro -r test.pcap`
 * Read PCAP from containers looping through all available versions of tcpdump
   * `./containnsm grouprun -r $PWD/nitroba.pcap -I tcpdump -- tcpdump -nnr nitroba.pcap -c 1 udp`
+
+#### Examples
+
+Graph throughput on Docker host's eth0 interface while downloading a Docker
+image of Bro 2.4.
+`./containnsm run -I speedometer:2.8 -i -- speedometer -rx eth0`
+![Speedometer](http://www.open-nsm.net/images/containnsm/speedometer.png)
