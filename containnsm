@@ -45,6 +45,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
         ${Y}listinstalled${N}   List installed images
         ${Y}run${N}             Create a container from image
         ${Y}grouprun${N}        Create a group of containers
+        ${Y}last${N}            Attach to most recently used image with shell
 
       ${B}Subcommand options:${N}
         new ${U}<dir>${N}                  Directory to create
@@ -108,6 +109,7 @@ options(){
   [[ "$SUBCOMMAND" == "groupbuild"    ]] && groupbuild "$PARAMS" && exit 0
   [[ "$SUBCOMMAND" == "list"          ]] && list  "$PARAMS" && exit 0
   [[ "$SUBCOMMAND" == "listinstalled" ]] && listinstalled "$PARAMS" && exit 0
+  [[ "$SUBCOMMAND" == "last"          ]] && last && exit 0
 
   if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
     while getopts "hC:ir:I:w:u:" OPTION $PARAMS
@@ -344,6 +346,13 @@ new(){
   [[ -d "$dir" ]] && die "Tool directory $dir already exists"
   mkdir -p "$PARAMS" || die "Error creating $dir directory"
   template "$dir" > $PARAMS/Dockerfile || { rmdir -p $PARAMS && die "Template generation failed"; }
+}
+
+last(){
+  local image
+  is_docker
+  image=$(docker images -q | head -n 1)
+  docker run -it "$image" bash || return 1
 }
 
 main(){
