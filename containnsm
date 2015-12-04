@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-COWSAY=/usr/games/cowsay
+COWSAY=$(which cowsay 2>/dev/null)
 LOGFILE=containnsm.log
 
 # Globals
@@ -38,6 +38,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
 
       ${B}Subcommands:${N}
         ${Y}help${N}            Help (this message)
+        ${Y}new${N}             Create new directory with Dockerfile template
         ${Y}build${N}           Build an image from version directory
         ${Y}groupbuild${N}      Build all image versions from tool directory
         ${Y}list${N}            List images in repository
@@ -46,6 +47,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
         ${Y}grouprun${N}        Create a group of containers
 
       ${B}Subcommand options:${N}
+        new ${U}<dir>${N}                  Directory to create
         build|groupbuild ${U}<dir>${N}     Directory to Dockerfile
         help                       Help
         list|listinstalled ${U}[<dir>]${N} List available images by tool
@@ -101,6 +103,7 @@ options(){
   argcheck 1
 
   [[ "$SUBCOMMAND" == "help"          ]] && usage
+  [[ "$SUBCOMMAND" == "new"           ]] && new "$PARAMS" && exit 0
   [[ "$SUBCOMMAND" == "build"         ]] && build "$PARAMS" && exit 0
   [[ "$SUBCOMMAND" == "groupbuild"    ]] && groupbuild "$PARAMS" && exit 0
   [[ "$SUBCOMMAND" == "list"          ]] && list  "$PARAMS" && exit 0
@@ -273,6 +276,65 @@ grouprun(){
     run "${PCAP}" "$CMDLINE" "${tool#*/}"
   done
   hi "$FUNCNAME complete"
+}
+
+template(){
+  local dir
+  dir="$1"
+  hi "Replace :TEXT: at $dir placeholders with your settings"
+cat <<EOF
+# :TOOL: :VERSION:
+#
+# VERSION 0.1
+FROM      opennsm/debian
+MAINTAINER :FIRST: :LAST: <:EMAIL:>
+
+# Metadata
+LABEL organization=opennsm
+LABEL program=:TOOL:
+
+# Specify container username e.g. training, demo
+ENV VIRTUSER opennsm
+# Specify program
+ENV PROG :TOOL:
+# Specify source extension
+ENV EXT tar.gz
+# Specify Bro version to download and install (e.g. tool-2.3.1)
+ENV VERS :VERSION:
+# Install directory
+ENV PREFIX /opt/:TOOL:
+# Path should include prefix
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:\$PREFIX/bin
+
+# Install dependencies
+RUN apt-get update -qq
+RUN apt-get install -yq :DEPENDENCIES: --no-install-recommends
+
+# Compile and install tool
+USER \$VIRTUSER
+WORKDIR /home/\$VIRTUSER
+RUN wget --no-check-certificate https://www.:TOOL:.org/downloads/\$PROG-\$VERS.\$EXT && tar -xzf \$PROG-\$VERS.\$EXT
+WORKDIR /home/\$VIRTUSER/\$PROG-\$VERS
+RUN ./configure --prefix=\$PREFIX && make
+USER root
+RUN make install
+RUN chmod u+s \$PREFIX/bin/\$PROG
+
+# Cleanup
+RUN rm -rf /home/\$VIRTUSER/\$PROG-\$VERS
+
+# Environment
+WORKDIR /home/\$VIRTUSER
+USER opennsm
+EOF
+}
+
+new(){
+  local dir
+  dir="$1"
+  [[ -d "$dir" ]] && die "Tool directory $dir already exists"
+  mkdir -p "$PARAMS" || die "Error creating $dir directory"
+  template "$dir" > $PARAMS/Dockerfile || { rmdir -p $PARAMS && die "Template generation failed"; }
 }
 
 main(){
