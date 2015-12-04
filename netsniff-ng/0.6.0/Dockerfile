@@ -36,6 +36,7 @@ RUN chmod u+s $DST/netsniff-ng
 RUN chmod u+s $DST/flowtop
 RUN chmod u+s $DST/trafgen
 RUN chmod u+s $DST/mausezahn
+RUN chmod u+s $DST/astraceroute
 
 # Environment
 WORKDIR /home/$VIRTUSER
