@@ -260,9 +260,18 @@ run(){
   image="$REPO/$image"
   [[ "$ARGV" =~ '--' ]] || die "Error: Missing container arguments e.g. \`\`$0 ... -- bash''"
   [[ "$NET" == "true" ]] && NET="--net=host" || unset NET
+  run_options "$image" || unset $OPTS
   printf "${Y}Image:${N}\t%s\n" "$image" >&2
-  [[ $pcap = "none" ]] && eval docker run -it "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
-  [[ $pcap != "none" ]] && eval docker run -it "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
+  [[ $pcap = "none" ]] && eval docker run -it "$OPTS" "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
+  [[ $pcap != "none" ]] && eval docker run -it "$OPTS" "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
+}
+
+run_options(){
+  local image
+  image="$1"
+  # Some images require specific settings, set them here
+  [[ "$image" =~ 'netsniff-ng' ]] && OPTS="--privileged=true"
+  [[ "$OPTS" ]] || return 0
 }
 
 grouprun(){
