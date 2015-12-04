@@ -20,6 +20,8 @@ OpenNSM's Docker image collection of NSM tools and software to effectively utili
 
 ## Use
 
+![Menu](http://www.open-nsm.net/images/containnsm/containnsm-menu.png)
+
 #### Layout
 Directory structure is dead simple: `tool_directory/version_directory/Dockerfile`.
 
