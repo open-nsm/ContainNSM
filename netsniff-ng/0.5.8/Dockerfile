@@ -13,6 +13,7 @@ LABEL program=netsniff-ng
 ENV VIRTUSER opennsm
 # Specify Netsniff-NG version to download and install (e.g. 0.5.8, 0.5.9-rc5)
 ENV VERS 0.5.8
+ENV DST /usr/local/sbin
 
 # Install dependencies
 RUN apt-get update -qq
@@ -30,6 +31,11 @@ RUN git checkout v$VERS && ./configure && make
 USER root
 WORKDIR /home/$VIRTUSER/netsniff-ng
 RUN make install
+RUN flowtop --update || true
+RUN chmod u+s $DST/netsniff-ng
+RUN chmod u+s $DST/flowtop
+RUN chmod u+s $DST/trafgen
+RUN chmod u+s $DST/mausezahn
 
 # Environment
 WORKDIR /home/$VIRTUSER
