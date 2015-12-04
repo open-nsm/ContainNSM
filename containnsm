@@ -59,16 +59,14 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
           ${WF}-u${N} ${U}<user>${N}                User in container (def: opennsm)
           ${WF}-C${N} ${U}<dir>${N}                 Set working directory in container
           ${WF}-I${N} ${U}<image>${N}               Docker image e.g. \`\`-I bro:2.4.1''
-          ${WF}--${N}                       Arguments passed to container e.g. \`\`-- bash''
+          ${WF}--${N} ${U}[command..]${N}           Arguments passed to container e.g. \`\`-- bash''
 
       ${B}Examples:${N}
             $0 build bro/2.4.1
-            $0 run -r /pcaps/ctf.pcap -I tcpdump:4.7.4 -- tcpdump -nr ctf.pcap -c 10
-            $0 run -w \$PWD -C \$PWD  -I bro:2.4 -- bro -i eth0
-            $0 run -I tcpdump -i -- tcpdump -ni docker0
-            $0 grouprun -r \$PWD/ctf.pcap -I tcpdump -- tcpdump -nr ctf.pcap -c 1 udp
+            $0 run -I tcpdump:4.7.4 -r /pcaps/ctf.pcap -- tcpdump -nr ctf.pcap -c 10
+            $0 run -I tcpdump -i -- tcpdump -ni eth0
 
-${Y}Usage:${N} ${MF}$0${N} ${WF}sub${N} {${Y}-I${N} ${WF}image${N}} [${Y}-r${N} ${WF}pcap${N}] [${Y}-w${N} ${WF}dir|file${N}] -- [${WF}commands${N}]
+${B}Usage:${N} ${MF}$0${N} ${Y}sub${N} [ { ${U}dir${N} } | [{${WF}-I${N} ${U}image${N}} [${WF}-r${N} ${U}pcap${N}] [${WF}-w${N} ${U}dir|file${N}] -- [${U}command${N}]]]
 EOF
 exit 1
 }
