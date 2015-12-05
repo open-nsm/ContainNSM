@@ -220,6 +220,7 @@ build(){
   local tag
   is_repo $FUNCNAME
   dir=$1
+  [[ "$dir" =~ .+/.+/.+ ]] && dir=$(dirname "$dir")
   [[ -d $dir ]] || die "$dir is not a directory or doesn't exist"
   [[ $dir = */*/* ]] && dir=${dir%/*}
   image="${dir%/*}"
