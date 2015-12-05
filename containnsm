@@ -293,10 +293,14 @@ run(){
   # Setup custom options for some images that require them to be useful
   run_options "$image" || unset $OPTS
 
+  # Get repo (tool) name
+  repo_tag=${image#*/}
+  repo=${repo_tag%:*}
+
   # Create container
   printf "${Y}Image:${N}\t%s %s\n" "$image" "$latest" >&2
-  [[ $pcap = "none" ]] && eval docker run -it --rm "$OPTS" "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline" 
-  [[ $pcap != "none" ]] && eval docker run -it --rm "$OPTS" "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
+  [[ $pcap = "none" ]] && eval docker run -it -h "$repo" --rm "$OPTS" "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline" 
+  [[ $pcap != "none" ]] && eval docker run -it -h "$repo" --rm "$OPTS" "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
 }
 
 run_options(){
