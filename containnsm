@@ -249,20 +249,53 @@ is_image(){
   [[ "${image}" ]] || die "No image specified, try \`\`-I <image>''"
 }
 
+format_image(){
+  image=${image//opennsm\/}  # Remove repo if given, we add it below
+  image="${image/\//:}"      # Put path in Docker image format by sub last / with :
+  image=${image%/}           # Remove any trailing forward slash
+  image=${image%:}           # Remove any trailing colons
+  ## Find the latest image version when latest is assumed because no tag
+  { [[ "$image" =~ latest ]] || ! [[ "$image" =~ :|/ ]]; } &&  latest "$image"
+  image="$REPO/$image"       # opennsm + '/' + $image
+}
+
 run(){
   local pcap
   local cmdline
   local image
+  local correct_format
+  local image_name_contains_opennsm
+  local non_opennsm_image_specified
+  correct_image_format=0
+  image_name_contains_opennsm=0
+  non_opennsm_image_specified=0
   pcap="$1"
   cmdline="$2"
-  image="${3:-$IMAGE}"
-  image="${image/\//:}"
-  image="$REPO/$image"
+  image="${3:-$IMAGE}"       # Satisfy image presence when grouprun()
+
+  # Be friendly by supporting different ways to specify the image e.g.
+  # -I bro
+  # -I bro:latest
+  # -I opennsm/bro
+  # -I opennsm/bro:latest
+  # -I opennsm/bro/latest
+  # This happens when format_image() is called otherwise friendliness doesn't apply
+
+  [[ "$image" =~ [a-z0-9_.-]+/[a-z0-9_.-]+:[a-z0-9_.-] ]] && correct_image_format=1
+  [[ "$image" =~ opennsm ]] && image_name_contains_opennsm=1
+  [[ $correct_image_format -eq 1 ]] && [[ $image_name_contains_opennsm -eq 0 ]] && non_opennsm_image_specified=1
+  [[ $non_opennsm_image_specified -eq 1 ]] || format_image
+
+  # Make sure arguments are passed to the container
   [[ "$ARGV" =~ '--' ]] || die "Error: Missing container arguments e.g. \`\`$0 ... -- bash''"
+  # Use the host network if -i was specified
   [[ "$NET" == "true" ]] && NET="--net=host" || unset NET
+  # Setup custom options for some images that require them to be useful
   run_options "$image" || unset $OPTS
-  printf "${Y}Image:${N}\t%s\n" "$image" >&2
-  [[ $pcap = "none" ]] && eval docker run -it --rm "$OPTS" "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
+
+  # Create container
+  printf "${Y}Image:${N}\t%s %s\n" "$image" "$latest" >&2
+  [[ $pcap = "none" ]] && eval docker run -it --rm "$OPTS" "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline" 
   [[ $pcap != "none" ]] && eval docker run -it --rm "$OPTS" "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
 }
 
@@ -272,6 +305,27 @@ run_options(){
   # Some images require specific settings, set them here
   [[ "$image" =~ 'netsniff-ng' ]] && OPTS="--privileged=true"
   [[ "$OPTS" ]] || return 0
+}
+
+latest(){
+  local name
+  name="${1%:*}"    # Trim trailing colon
+  name="${name#*/}" # Trim organization
+
+  # Only sort on versioned numbered tool directories
+  [[ "$name" =~ debian ]] && return 0
+
+  # Skip this whole thing if we're not in the repo
+  if [[ -f "$PWD"/.git/config ]]; then
+    # If tool directory doesn't exist then don't get latest version
+    if [[ -d $name ]]; then
+      cd $name
+      latest=$(for dir in *; do printf "$dir\n"; done | tail -n 1)
+      cd $OLDDIR
+      image="$name:$latest"
+      latest="(${WF}latest${N})"
+    fi
+  fi
 }
 
 grouprun(){
