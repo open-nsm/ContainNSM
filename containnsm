@@ -301,7 +301,7 @@ run(){
   # Create container
   printf "${Y}Image:${N}\t%s %s\n" "$image" "$latest" >&2
   [[ $pcap = "none" ]] && eval docker run -it -e "HOSTNAME=${repo}" --rm "$OPTS" "$NET" -u "$USER" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
-  [[ $pcap != "none" ]] && eval docker run -it -e "HOSTNAME=${repo}" "$repo" --rm "$OPTS" "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
+  [[ $pcap != "none" ]] && eval docker run -it -e "HOSTNAME=${repo}" --rm "$OPTS" "$NET" -u "$USER" -v "${pcap}:${pcap}:ro" -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
 }
 
 run_options(){
