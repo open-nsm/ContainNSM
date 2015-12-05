@@ -1,7 +1,12 @@
-.vagrant
+.*
 testing
 test
 .state
 *.pcap
 .bash*
+*.sh
+*.argus
+*.log
+*.bpf
+*.patch
 tmp/
