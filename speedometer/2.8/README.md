@@ -12,7 +12,7 @@ Or, build all speedometer versions:
 $ ./containnsm groupbuild speedometer
 ```
 
-Get traffic stats on Docker host's eth0 interface.
+Get receive (rx) traffic stats on Docker host's eth0 interface.
 
 ```
 $ ./containnsm run -I speedometer:2.8 -i -- speedometer  -rx eth0 -p

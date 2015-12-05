@@ -1,6 +1,8 @@
 # ContainNSM
 OpenNSM's Docker image collection of NSM tools and software to effectively utilize them. We have 100's of images...
 
+![Menu](http://www.open-nsm.net/images/containnsm/containnsm-menu.png)
+
 ### What?
 * Collection of Docker images on [Docker Hub](https://hub.docker.com/u/opennsm/)
 * Collection of Dockerfiles in this repo
@@ -20,7 +22,17 @@ OpenNSM's Docker image collection of NSM tools and software to effectively utili
 
 ## Use
 
-![Menu](http://www.open-nsm.net/images/containnsm/containnsm-menu.png)
+
+#### Install
+
+![Make Menu](http://www.open-nsm.net/images/containnsm/containnsm-make.png)
+
+```
+git clone https://github.com/open-nsm/ContainNSM && cd ContainNSM
+sudo make install
+```
+
+![Install](http://www.open-nsm.net/images/containnsm/containnsm-makeinstall.png)
 
 #### Layout
 Directory structure is dead simple: `tool_directory/version_directory/Dockerfile`.
@@ -104,7 +116,7 @@ send them to bitbucket with `2>/dev/null`
 
 #### Examples
 
-Graph throughput on Docker host's eth0 interface while downloading a Docker
+Graph throughput on Docker host's physical eth0 interface while downloading a Docker
 image of Bro 2.4.
 
 * `./containnsm run -I speedometer:2.8 -i -- speedometer -rx eth0`
