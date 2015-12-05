@@ -9,7 +9,7 @@ shift 1
 ARGV="$@"
 PARAMS="${ARGV%%--*}"
 CMDLINE="${ARGV#*--}"
-REPO=opennsm
+ORG=opennsm
 USER=opennsm
 
 normal="$(tput sgr0)"
@@ -162,7 +162,7 @@ test_paths(){
 
 config(){
   local cwd
-  home=/home/${REPO}
+  home=/home/${ORG}
   OUT="${OUT:-$PWD}"
   PCAP="${PCAP:-none}"
   [[ "$PCAP" = "none" ]] || PCAP_DIR=$(dirname "$PCAP")
@@ -208,9 +208,9 @@ listinstalled(){
   local tool
   tool="${1%/}"
   if [[ $tool ]]; then
-    docker images -f "label=program=$tool" 
+    docker images -f "label=program=$tool"
   else
-    docker images -f "label=organization=$REPO" 
+    docker images -f "label=organization=$ORG"
   fi
 }
 
@@ -225,7 +225,7 @@ build(){
   image="${dir%/*}"
   tag="${dir#*/}"
   name="${image}:${tag}"
-  docker build -t ${REPO}/${name} - < $dir/Dockerfile
+  docker build -t ${ORG}/${name} - < $dir/Dockerfile
   [[ $? -ne 0 ]] && die "Build failed, check your Dockerfile"
   hi "Image created - try \`\`${MF}./containnsm run -I ${name} -- bash${N}'' to test it out"
   return 0
@@ -256,7 +256,7 @@ format_image(){
   image=${image%:}           # Remove any trailing colons
   ## Find the latest image version when latest is assumed because no tag
   { [[ "$image" =~ latest ]] || ! [[ "$image" =~ :|/ ]]; } &&  latest "$image"
-  image="$REPO/$image"       # opennsm + '/' + $image
+  image="$ORG/$image"       # opennsm + '/' + $image
 }
 
 run(){
