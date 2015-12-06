@@ -68,7 +68,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
 
 ${B}Usage:${N} ${MF}$0${N} ${Y}sub${N} [ { ${U}dir${N} } | [{${WF}-I${N} ${U}image${N}} [${WF}-r${N} ${U}pcap${N}] [${WF}-w${N} ${U}dir|file${N}] -- [${U}command${N}]]]
 EOF
-exit 1
+return $?
 }
 
 die(){
@@ -95,19 +95,27 @@ argcheck(){
   [[ $ARGC -lt $num ]] && die "Missing arguments! Use \`\`$0 help'' for help."
 }
 
+check_status(){
+  local status_code
+  status_code="$1"
+  exit $status_code
+}
+
 trap 'die "Trap recieved, exiting...";' 1 2 3 20
 
 options(){
   # Check for arguments
   argcheck 1
 
-  [[ "$SUBCOMMAND" == "help"          ]] && usage
-  [[ "$SUBCOMMAND" == "new"           ]] && new "$PARAMS" && exit 0
-  [[ "$SUBCOMMAND" == "build"         ]] && build "$PARAMS" && exit 0
-  [[ "$SUBCOMMAND" == "groupbuild"    ]] && groupbuild "$PARAMS" && exit 0
-  [[ "$SUBCOMMAND" == "list"          ]] && list  "$PARAMS" && exit 0
-  [[ "$SUBCOMMAND" == "listinstalled" ]] && listinstalled "$PARAMS" && exit 0
-  [[ "$SUBCOMMAND" == "last"          ]] && last && exit 0
+  case $SUBCOMMAND in
+    help)           usage;                   check_status $?;;
+    new)            new "$PARAMS";           check_status $?;;
+    build)          build "$PARAMS";         check_status $?;;
+    groupbuild)     groupbuild "$PARAMS";    check_status $?;;
+    list)           list "$PARAMS";          check_status $?;;
+    listinstalled)  listinstalled "$PARAMS"; check_status $?;;
+    last)           last "$PARAMS";          check_status $?;;
+  esac
 
   if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
     while getopts "hC:ir:I:w:u:" OPTION $PARAMS
@@ -201,7 +209,7 @@ list(){
     ! [[ $print ]] && printf "opennsm/${image/\//:}%30s\n" "$image"
     [[ $print ]] && printf "opennsm/${image/\//:}\n"
   done
-  return 0
+  return $?
 }
 
 listinstalled(){
@@ -212,6 +220,7 @@ listinstalled(){
   else
     docker images -f "label=organization=$ORG"
   fi
+  return $?
 }
 
 build(){
@@ -229,7 +238,6 @@ build(){
   docker build -t ${ORG}/${name} - < $dir/Dockerfile
   [[ $? -ne 0 ]] && die "Build failed, check your Dockerfile"
   hi "Image created - try \`\`${MF}./containnsm run -I ${name} -- bash${N}'' to test it out"
-  return 0
 }
 
 groupbuild(){
@@ -401,14 +409,16 @@ new(){
   dir="$1"
   [[ -d "$dir" ]] && die "Tool directory $dir already exists"
   mkdir -p "$PARAMS" || die "Error creating $dir directory"
-  template "$dir" > $PARAMS/Dockerfile || { rmdir -p $PARAMS && die "Template generation failed"; }
+  template "$dir" > $PARAMS/Dockerfile || { rmdir -p $PARAMS && die "Template generation failed (write permissions?)"; }
+  return $?
 }
 
 last(){
   local image
   is_docker
   image=$(docker images -q | head -n 1)
-  docker run -it "$image" bash || return 1
+  docker run -it "$image" bash
+  return $?
 }
 
 main(){
