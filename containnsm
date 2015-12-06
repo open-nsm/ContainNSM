@@ -351,8 +351,6 @@ template(){
   dir="$1"
   hi "Replace :TEXT: at $dir placeholders with your settings"
 cat <<EOF
-# :TOOL: :VERSION:
-#
 # VERSION 0.1
 FROM      opennsm/debian
 MAINTAINER :FIRST: :LAST: <:EMAIL:>
@@ -386,7 +384,7 @@ WORKDIR /home/\$VIRTUSER/\$PROG-\$VERS
 RUN ./configure --prefix=\$PREFIX && make
 USER root
 RUN make install
-RUN chmod u+s \$PREFIX/bin/\$PROG
+RUN chmod u+s \$PREFIX/\$PROG
 
 # Cleanup
 RUN rm -rf /home/\$VIRTUSER/\$PROG-\$VERS
