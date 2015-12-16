@@ -59,6 +59,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
           ${WF}-u${N} ${U}<user>${N}                User in container (def: opennsm)
           ${WF}-C${N} ${U}<dir>${N}                 Set working directory in container
           ${WF}-I${N} ${U}<image>${N}               Docker image e.g. \`\`-I bro:2.4.1''
+          ${WF}-c${N} ${U}<num>${N}                 Number of versions to iterate through (grouprun only)
           ${WF}--${N} ${U}[command..]${N}           Arguments passed to container e.g. \`\`-- bash''
 
       ${B}Examples:${N}
@@ -118,12 +119,13 @@ options(){
   esac
 
   if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
-    while getopts "hC:ir:I:w:u:" OPTION $PARAMS
+    while getopts "hc:C:ir:I:w:u:" OPTION $PARAMS
     do
       case $OPTION in
         h) usage;;
         C) WORKDIR="$OPTARG";;
         i) NET="true";;
+        c) COUNT="$OPTARG";;
         r) PCAP="$OPTARG";;
         u) USER="$OPTARG";;
         w) WRITE=1; OUT="$OPTARG";;
@@ -344,15 +346,19 @@ latest(){
 
 grouprun(){
   local image
+  local count
+  count=0
   image="${IMAGE}"
   image="${image%:*}"
   image="${image%%/*}"
   group=$(list "${image/opennsm\//}" "listrepo")
   printf "${WF}I will attempt to pull missing images...${N}\n" >&2
   for tool in $group; do
+    [[ $COUNT ]] && [[ $count -ge $COUNT ]] && break
+    count=$((count+1))
     run "${PCAP}" "$CMDLINE" "${tool#*/}"
   done
-  hi "$FUNCNAME complete"
+  hi "$FUNCNAME of ${COUNT:-all} versions complete"
 }
 
 template(){
