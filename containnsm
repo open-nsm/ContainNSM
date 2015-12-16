@@ -64,8 +64,8 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
 
       ${B}Examples:${N}
             $0 build bro/2.4.1
-            $0 run -I tcpdump:4.7.4 -r /pcaps/ctf.pcap -- tcpdump -nr ctf.pcap -c 10
-            $0 run -I tcpdump -i -- tcpdump -ni eth0
+            $0 run -I tcpdump -r /pcaps/ctf.pcap -- tcpdump -nr ctf.pcap -c 10
+            $0 run -I tcpdump:4.7.4 -i -- tcpdump -ni eth0
 
 ${B}Usage:${N} ${MF}$0${N} ${Y}sub${N} [ { ${U}dir${N} } | [{${WF}-I${N} ${U}image${N}} [${WF}-r${N} ${U}pcap${N}] [${WF}-w${N} ${U}dir|file${N}] -- [${U}command${N}]]]
 EOF
