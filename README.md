@@ -95,7 +95,7 @@ will be used.
 Options and arguments passed after `--` are run inside the container.
 When using options such as `-r`, `-w`, `-C` an absolute path must be the
 argument. Informational messages are written to stderr, if they're bothering you
-send them to bitbucket with `2>/dev/null` 
+send them to bitbucket with `2>/dev/null` or use quiet mode with `-q`.
 
 * Enter container with bash shell
   * `./containnsm run -I bro -- bash`

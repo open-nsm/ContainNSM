@@ -60,6 +60,7 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
           ${WF}-C${N} ${U}<dir>${N}                 Set working directory in container
           ${WF}-I${N} ${U}<image>${N}               Docker image e.g. \`\`-I bro:2.4.1''
           ${WF}-c${N} ${U}<num>${N}                 Number of versions to iterate through (grouprun only)
+          ${WF}-q${N}                       Quiet mode
           ${WF}--${N} ${U}[command..]${N}           Arguments passed to container e.g. \`\`-- bash''
 
       ${B}Examples:${N}
@@ -96,6 +97,10 @@ argcheck(){
   [[ $ARGC -lt $num ]] && die "Missing arguments! Use \`\`$0 help'' for help."
 }
 
+quiet_mode(){
+  exec 2> /dev/null
+}
+
 check_status(){
   local status_code
   status_code="$1"
@@ -119,7 +124,7 @@ options(){
   esac
 
   if [[ "$SUBCOMMAND" =~ run|grouprun ]]; then
-    while getopts "hc:C:ir:I:w:u:" OPTION $PARAMS
+    while getopts "hc:C:ir:I:qw:u:" OPTION $PARAMS
     do
       case $OPTION in
         h) usage;;
@@ -130,6 +135,7 @@ options(){
         u) USER="$OPTARG";;
         w) WRITE=1; OUT="$OPTARG";;
         I) IMAGE="${OPTARG}";;
+        q) quiet_mode;;
         \?) die "Invalid option: -$OPTARG" >&2;;
       esac
     done
