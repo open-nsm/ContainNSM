@@ -214,6 +214,8 @@ list(){
   [[ "$SUBCOMMAND" == "list" ]] && printf "Repo/Image:Tag%32s\n" "Dir/Dir" >&2
   for image in ${dir:-*}/*
   do
+    tag=${image#*/}
+    [[ "$tag" =~ [a-zA-Z] ]] && continue
     ! [[ $print ]] && printf "opennsm/${image/\//:}%30s\n" "$image"
     [[ $print ]] && printf "opennsm/${image/\//:}\n"
   done
@@ -250,12 +252,16 @@ build(){
 
 groupbuild(){
   local dir
+  local tag
   local version
   dir="${1%/*}"
   [[ -d "$dir" ]] || die "$dir is not a tool directory or doesn't exist"
   for version in $dir/*;
   do
-    [[ -d "$version" ]] && build $version
+    tag=${version#*/}
+    [[ -d "$version" ]]      || continue
+    [[ "$tag" =~ [a-zA-Z] ]] && continue
+    build $version
   done
   hi "$FUNCNAME complete"
 }
