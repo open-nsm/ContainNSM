@@ -10,8 +10,14 @@ Or, build all iftop versions:
 $ ./containnsm groupbuild iftop
 ```
 
-Process iftop data file on host and display results to stdout
+Run iftop on container interface
 ```
 $ ./containnsm run -I iftop:0.17 -- iftop -i eth0
+...
+```
+
+Run iftop on Docker host's physical interface from inside container
+```
+$ ./containnsm run -I iftop:0.17 -i -- iftop -i eth0
 ...
 ```
