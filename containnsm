@@ -425,6 +425,7 @@ EOF
 new(){
   local dir
   dir="$1"
+  [[ "$dir" ]] || die "No directory argument given, try \`\`./containnsm new <tool>/<version>''"
   [[ -d "$dir" ]] && die "Tool directory $dir already exists"
   mkdir -p "$PARAMS" || die "Error creating $dir directory"
   template "$dir" > $PARAMS/Dockerfile || { rmdir -p $PARAMS && die "Template generation failed (write permissions?)"; }
