@@ -54,8 +54,8 @@ ${MF}ContainNSM:${N} ${Y}Easily utilize the ContainNSM docker image collection${
         list|listinstalled ${U}[<dir>]${N} List available images by tool
         run|grouprun ${U}[options]${N}
           ${WF}-i${N}                       Share network interfaces with host
-          ${WF}-r${N} ${U}<file>${N}                Read in file, mostly PCAP (Mounts in container)
-          ${WF}-w${N} ${U}<dir|file>${N}            Write out data to directory or file
+          ${WF}-r${N} ${U}<file>${N}                Read in dir(s)/file(s) (sep: ,) e.g. \`\`-r /test.pcap:/opt/test.pcap''
+          ${WF}-w${N} ${U}<dir|file>${N}            Write out data to dir(s)/file(s) (sep: ,) e.g. \`\`-w /test:/tmp''
           ${WF}-u${N} ${U}<user>${N}                User in container (def: opennsm)
           ${WF}-C${N} ${U}<dir>${N}                 Set working directory in container
           ${WF}-I${N} ${U}<image>${N}               Docker image e.g. \`\`-I bro:2.4.1''
@@ -131,7 +131,7 @@ options(){
         C) WORKDIR="$OPTARG";;
         i) NET="true";;
         c) COUNT="$OPTARG";;
-        r) PCAP="$OPTARG";;
+        r) FILES="$OPTARG";;
         u) USER="$OPTARG";;
         w) WRITE=1; OUT="$OPTARG";;
         I) IMAGE="${OPTARG}";;
@@ -148,31 +148,15 @@ is_docker(){
   which docker 1>/dev/null 2>/dev/null || die "Docker not found, check PATH"
 }
 
-is_pcap(){
-  local pcap
-  local is_pcap
-  pcap="$1"
-
-  # Read option not used
-  [[ $pcap == "none" ]] && return 0
-
-  # Test for valid PCAP
-  [[ -f $pcap ]] || die "File $pcap not found or not file"
-  is_pcap=$(file $pcap 2>/dev/null)
-  [[ "$is_pcap" =~ "tcpdump capture file" ]] || hi "Not a valid PCAP file..maybe this was intentional" >&2
-  return 0
-}
-
 test_paths(){
   printf "${Y}Mount:${N} ${WF}Host: ${N}%s\n    ${MF}->${N} ${WF}Container: ${N}%s\n" "$OUT" "$OUT"  >&2
   printf "${Y}Cwd:${N}\t%s\n" "$WORKDIR" >&2
   printf "${Y}HostNet:${N}%6s\n" "${NET}" >&2
-  printf "${Y}PCAP:${N}\t%s\n" "$PCAP" >&2
 
   [[ "$OUT"     = /* ]]     || die "Error: $OUT is not an absolute path!"
   [[ "$WORKDIR" = /* ]]     || die "Error: $workdir is not an absolute path!"
-  [[ "$PCAP"    = "none" ]] && return 0
-  [[ "$PCAP"    = /* ]]     || die "Error: $pcap is not an absolute path!"
+  [[ "$FILES"   = "none" ]] && return 0
+  is_path "$FILES"
   return 0
 }
 
@@ -180,11 +164,16 @@ config(){
   local cwd
   home=/home/${ORG}
   OUT="${OUT:-$PWD}"
-  PCAP="${PCAP:-none}"
-  [[ "$PCAP" = "none" ]] || PCAP_DIR=$(dirname "$PCAP")
-  WORKDIR="${WORKDIR:-$PCAP_DIR}"
+  FILES="${FILES:-none}"
+
+  ## Make some sane relative path guesses for user convenience
+  # If multiple paths are in FILES and ``-C'' is not used, WORKDIR will be empty, use PWD from host then
   [[ $WORKDIR ]] || WORKDIR="$PWD"
-  ! [[ "$WRITE" -eq 1 ]] && [[ "$PCAP" = "none" ]] && WORKDIR="$home"
+  # If ``-w'' is specified and no files in FILES, set to opennsm user's home dir in container
+  [[ "$WRITE" -eq 1 ]] || { [[ "$FILES" = "none" ]] && WORKDIR="$home"; }
+
+  ## Configure networking
+  # If ``-i'' is specified set NET to true, handled in run()
   [[ "$NET" == "true" ]] || NET="false"
 }
 
@@ -203,6 +192,16 @@ is_dir(){
   fi
 }
 
+is_path(){
+  local paths
+  paths="$1"
+  for i in ${paths/,/ }
+  do
+    path=${i%%:*}
+    [[ "$path"   = /* ]] || die "Error: $path is not an absolute path!"
+    { [[ -f $path ]] || [[ -d $path ]]; } || die "Error: $path does not exist"
+  done
+}
 
 list(){
   local dir
@@ -282,8 +281,24 @@ format_image(){
   image="$ORG/$image"       # opennsm + '/' + $image
 }
 
+config_mounts(){
+  local files
+  local mount
+  local perm
+  files="$1"
+  perm="$2"
+  for i in ${files//,/ }
+  do
+    [[ "$i" =~ : ]]   || i="${i}:${i}" # Syntax should be src_mnt:dst_mnt
+    [[ "$i" =~ :${perm} ]] || i="${i}:${perm}"   # Add read-only permissions
+    i="-v $i"                          # Add volume option to pass to docker
+    mount="$i $mount"
+  done
+  echo "$mount"
+}
+
 run(){
-  local pcap
+  local files
   local cmdline
   local image
   local correct_format
@@ -292,7 +307,7 @@ run(){
   correct_image_format=0
   image_name_contains_opennsm=0
   non_opennsm_image_specified=0
-  pcap="$1"
+  files="$1"
   cmdline="$2"
   image="${3:-$IMAGE}"       # Satisfy image presence when grouprun()
 
@@ -320,10 +335,13 @@ run(){
   repo_tag=${image#*/}
   repo=${repo_tag%:*}
 
+  # Configure file/dir mount syntax
+  [[ "$files" == "none" ]] || mount="$(config_mounts "$files" ro)"
+  out="$(config_mounts "$OUT" rw)"
+
   # Create container
   printf "${Y}Image:${N}\t%s %s\n" "$image" "$latest" >&2
-  [[ "$pcap" != "none" ]] && pcap="-v ${pcap}:${pcap}:ro" || unset pcap
-  eval docker run -it -e "HOSTNAME=${repo}" --rm "$OPTS" "$NET" -u "$USER" $pcap -v "${OUT}:${OUT}:rw" -w "$WORKDIR" "$image" "$cmdline"
+  eval docker run -it -e "HOSTNAME=${repo}" --rm "$OPTS" "$NET" -u "$USER" "$mount" "$out" -w "$WORKDIR" "$image" "$cmdline"
   return $?
 }
 
@@ -368,7 +386,7 @@ grouprun(){
   for tool in $group; do
     [[ $COUNT ]] && [[ $count -ge $COUNT ]] && break
     count=$((count+1))
-    run "${PCAP}" "$CMDLINE" "${tool#*/}"
+    run "${FILES}" "$CMDLINE" "${tool#*/}"
   done
   hi "$FUNCNAME of ${COUNT:-all} versions complete"
 }
@@ -445,15 +463,13 @@ main(){
   # Test if image was given
   is_image "$IMAGE"
   config
-  # Check for absolute paths
+  # Check for absolute paths and file existence
   test_paths
   # Check for Docker
   is_docker
-  # Check input file
-  [[ $PCAP ]] && is_pcap "${PCAP}"
 
   if [[ "$SUBCOMMAND" == "run" ]]; then
-    run "${PCAP}" "$CMDLINE" || exit 1
+    run "${FILES}" "$CMDLINE" || exit 1
   fi
 
   if [[ "$SUBCOMMAND" == "grouprun" ]]; then 

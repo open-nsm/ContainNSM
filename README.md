@@ -93,8 +93,22 @@ Using `./containnsm` we can easily do things like:
 Notes: If a version tag e.g. `:2.8.1` is not specified the latest version of the image
 will be used.
 Options and arguments passed after `--` are run inside the container.
-When using options such as `-r`, `-w`, `-C` an absolute path must be the
-argument. Informational messages are written to stderr, if they're bothering you
+When using options such as `-r`, `-w`, `-C` an absolute path must be the argument.
+`-r` and `-w` can take multiple directories or files as arguments when delimited by a comma.
+
+By default, without a colon signifying *src_mount:dst_mount* a path will be
+evaluated to be the same path on the host as in the container. For example,
+`-r /pcap/test.pcap` will mount the same path in the container which allows you
+to then read from the path in the container via `tcpdump -nr /pcap/test.pcap`. Any
+directories not available in container but in the path will be created on the fly
+to match the path (this is behavior of Docker) and works to our advantage.
+
+* Read in (mount) multiple files in container
+  * `./containnsm run ... -r /pcap/test.pcap,~/.config:/home/opennsm/.config -- tcpdump -nr /pcap/test.pcap`
+* Write out (mount) multiple directories read-write on host in container
+  * `./containnsm run ... -w /test,/input:/pcaps -- tcpdump -ni -w /pcaps/example.pcap`
+
+Informational messages are written to stderr, if they're bothering you
 send them to bitbucket with `2>/dev/null` or use quiet mode with `-q`.
 
 * Enter container with bash shell
