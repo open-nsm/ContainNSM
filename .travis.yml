@@ -8,4 +8,5 @@ before_install:
 - sudo apt-get install -yq bash make
 
 script:
+- cd $TRAVIS_BUILD_DIR
 - bash -c "for i in *; do test -d $i && sudo ./containnsm groupbuild $i; done"
