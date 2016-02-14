@@ -1,0 +1,11 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+- apt-get update -qq
+- apt-get install -yq bash make
+
+script:
+- bash -c "for i in *; do test -d $i && ./containnsm groupbuild $i; done"
