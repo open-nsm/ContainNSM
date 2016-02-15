@@ -1,11 +1,11 @@
 sudo: required
 
 services:
-  - docker
+- docker
 
 before_install:
 - sudo apt-get update -qq
 - sudo apt-get install -yq bash make
 
 script:
-- bash -c "for i in *; do test -d $i && ./containnsm groupbuild $i; done"
+- ./unit-tests
