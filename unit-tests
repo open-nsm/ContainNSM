@@ -3,6 +3,5 @@ echo CWD: $PWD
 for i in */*; do
   test -d $i || continue
   echo Image: $i
-  ./containnsm build $i
-  ./containnsm -I $i -- pwd
+  ./containnsm build $i && ./containnsm -I $i -- pwd
 done
