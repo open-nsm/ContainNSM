@@ -1,3 +1,9 @@
+notifications:
+  slack:
+    rooms:
+      - opennsm:rPEAaXQcHmkzGBqBZjZ2T2iq#alerts
+      - opennsm:rPEAaXQcHmkzGBqBZjZ2T2iq#containnsm
+
 sudo: required
 
 services:
