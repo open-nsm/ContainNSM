@@ -1,7 +1,17 @@
 #!/bin/bash
-echo CWD: $PWD
+normal="$(tput sgr0)"
+redf="$(tput setaf 1)"
+N="${normal}"
+RF="${redf}"
+
+die(){
+  printf "${RF}$*${N}\n" >&2
+  exit 1
+}
+
+echo Cwd: $PWD
 for i in */*; do
   test -d $i || continue
   echo Image: $i
-  ./containnsm build $i && ./containnsm -I $i -- pwd
+  ./containnsm build $i && ./containnsm -I $i -- pwd || die "Build failed on $i"
 done
