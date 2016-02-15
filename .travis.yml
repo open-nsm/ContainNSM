@@ -8,5 +8,4 @@ before_install:
 - sudo apt-get install -yq bash make
 
 script:
-- ls && pwd
-- bash -c "pwd && for i in *; do test -d $i && sudo ./containnsm groupbuild $i; done"
+- bash -c "for i in *; do test -d $i && ./containnsm groupbuild $i; done"
