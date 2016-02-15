@@ -8,4 +8,4 @@ before_install:
 - sudo apt-get install -yq bash make
 
 script:
-- ./unit-tests
+- sudo ./unit-tests
