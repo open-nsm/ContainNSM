@@ -5,9 +5,9 @@ Obtain image:
 
 ```
 $ git clone https://github.com/open-nsm/ContainNSM && cd ContainNSM
-$ ./containnsm build snort/2.9.8.0
+$ ./containnsm build snort/2.9.9.0
 Or
-$ docker pull opennsm/snort:2.9.8.0
+$ docker pull opennsm/snort:2.9.9.0
 Or, build all Snort versions:
 $ ./containnsm groupbuild snort
 ```
@@ -40,7 +40,7 @@ IPV6-ICMP TTL:1 TOS:0x0 ID:256 IpLen:40 DgmLen:76
 
 Run snort in packet dump mode on Docker host's physical eth1 interface
 ```
-$ ./containnsm run -I snort:2.9.6.0 -i eth1 -- snort -X -i eth0
+$ ./containnsm run -I snort:2.9.9.0 -i eth1 -- snort -X -i eth0
 Running in packet dump mode
 ...
 Commencing packet processing (pid=1)
