@@ -13,5 +13,5 @@ echo Cwd: $PWD
 for i in */*; do
   test -d $i || continue
   echo Image: $i
-  ./containnsm build $i && ./containnsm -I $i -- pwd || die "Build failed on $i"
+  ./containnsm build $i && ./containnsm run -I $i -- pwd || die "Build failed on $i"
 done
