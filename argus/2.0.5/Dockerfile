@@ -36,21 +36,12 @@ WORKDIR /home/$VIRTUSER/$PROG-$VERS
 RUN ./configure --with-sasl --prefix=/opt && make
 USER root
 RUN make install
-RUN chmod u+s $PREFIX/sbin/argus
 
 # Compile and install argus client
-USER $VIRTUSER
-WORKDIR /home/$VIRTUSER
-RUN wget --no-check-certificate http://qosient.com/argus/src/archive/$PROG-clients-$VERS.$EXT
-RUN tar -zxf $PROG-clients-$VERS.$EXT
-WORKDIR /home/$VIRTUSER/$PROG-clients-$VERS
-RUN ./configure --with-sasl --with-GeoIP --prefix=/opt && make
-USER root
-RUN make install
+## Client package doesn't exist at http://qosient.com/argus/src/archive/
 
 # Cleanup
 RUN rm -rf /home/$VIRTUSER/$PROG-$VERS
-RUN rm -rf /home/$VIRTUSER/$PROG-clients-$VERS
 
 # Environment
 WORKDIR /home/$VIRTUSER
