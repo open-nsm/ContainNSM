@@ -240,6 +240,7 @@ build(){
   dir=$1
   [[ "$dir" =~ .+/.+/.+ ]] && dir=$(dirname "$dir")
   [[ -d $dir ]] || die "$dir is not a directory or doesn't exist"
+  [[ -f $dir/Dockerfile ]] || die "No Docker file in $dir"
   [[ $dir = */*/* ]] && dir=${dir%/*}
   image="${dir%/*}"
   tag="${dir#*/}"
