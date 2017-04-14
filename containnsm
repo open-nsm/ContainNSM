@@ -260,7 +260,7 @@ groupbuild(){
   do
     tag=${version#*/}
     [[ -d "$version" ]]      || continue
-    [[ "$tag" =~ [a-zA-Z] ]] && continue
+    [[ "x$tag" = "x" ]] && continue
     build $version
   done
   hi "$FUNCNAME complete"
@@ -473,7 +473,7 @@ main(){
     run "${FILES}" "$CMDLINE" || exit 1
   fi
 
-  if [[ "$SUBCOMMAND" == "grouprun" ]]; then 
+  if [[ "$SUBCOMMAND" == "grouprun" ]]; then
     grouprun "$PARAMS"
   fi
 }
