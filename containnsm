@@ -2,8 +2,6 @@
 COWSAY=$(which cowsay 2>/dev/null)
 LOGFILE=containnsm.log
 
-set -x
-
 # Globals
 ARGC=$#
 SUBCOMMAND="$1"
