@@ -11,7 +11,7 @@ ENV VIRTUSER opennsm
 ENV PROG suricata
 # Specify Suricata version to download and install (e.g. 2.0.9)
 ENV VERS 3.2.1
-# Install directory 
+# Install directory
 ENV PREFIX /opt
 # Path should include prefix
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PREFIX/bin
@@ -30,7 +30,7 @@ RUN wget http://www.openinfosecfoundation.org/download/$PROG-$VERS.tar.gz
 RUN tar -xvzf $PROG-$VERS.tar.gz
 WORKDIR /home/$VIRTUSER/$PROG-$VERS
 RUN ./configure --enable-nfqueue --enable-geoip --prefix=$PREFIX \
---enable-profiling --enable-debug --enable-unittests --sysconfdir=/etc \
+--enable-profiling --enable-debug --enable-debug-validation --sysconfdir=/etc \
 --localstatedir=/var && make
 USER root
 RUN make install && make install-full
